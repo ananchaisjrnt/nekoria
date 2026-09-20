@@ -5,6 +5,12 @@ services:
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nekoria/web build
     staticPublishPath: ./apps/web/dist
     autoDeployTrigger: commit
+    envVars:
+      - key: VITE_GAME_SERVER_URL
+        fromService:
+          type: web
+          name: nekoria-server
+          property: host
     routes:
       - type: rewrite
         source: /*

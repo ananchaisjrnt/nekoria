@@ -6,7 +6,7 @@ export class BasicAttackController {
   private state: "idle" | "approaching" | "striking" = "idle";
   private strikeElapsed = 0;
 
-  constructor(private readonly player: TransformNode, private readonly movement: PlayerMovementController, private readonly getTarget: (id: string) => TransformNode | null) {}
+  constructor(private readonly player: TransformNode, private readonly movement: PlayerMovementController, private readonly getTarget: (id: string) => TransformNode | null, private readonly onStrike: (id: string) => void) {}
 
   request(targetId: string | null): void {
     if (!targetId) return;
@@ -38,9 +38,10 @@ export class BasicAttackController {
       this.player.rotation.y = Math.atan2(-offset.x, -offset.z);
       this.state = "striking";
       this.strikeElapsed = 0;
+      if (this.targetId) this.onStrike(this.targetId);
     }
     this.strikeElapsed += deltaSeconds;
-    this.player.rotation.z = Math.sin(Math.min(1, this.strikeElapsed / 0.32) * Math.PI) * -0.22;
-    if (this.strikeElapsed >= 0.32) this.cancel();
+    this.player.rotation.z = this.strikeElapsed <= 0.32 ? Math.sin((this.strikeElapsed / 0.32) * Math.PI) * -0.22 : 0;
+    if (this.strikeElapsed >= 1) { this.state = "approaching"; this.strikeElapsed = 0; }
   }
 }

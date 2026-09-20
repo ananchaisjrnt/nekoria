@@ -28,15 +28,17 @@ No active card.
 
 ## User Testing
 
-### NK-005 — Basic Attack and Auto Approach
+### NK-006 / NK-007 / NK-008 — Map, Combat, Progression
 
-- SR: `docs/SR_005_BASIC_ATTACK.md`
-- Owner: User
-- Status: Awaiting deployed-build acceptance
-- Scope: ATK command, desktop double-click, auto approach, placeholder strike, mobile proximity lock
-- Excludes: HIT, MISS, CRIT, damage, HP changes, death, EXP, loot, Auto Battle
+- Status: Awaiting combined deployed-build acceptance
+- Scope: 4× map area, authoritative combat results, monster engagement, EXP/Level/Status Points
 
 ## Done
+
+### NK-005 — Basic Attack and Auto Approach
+
+- Status: Accepted by user
+- Commit: `f265d4c`
 
 ### NK-004 — Monster Roaming
 
@@ -78,11 +80,9 @@ No active card.
 
 These cards are not authorized for implementation until Sol issues an SR.
 
-1. NK-006 — Server-authoritative HIT, MISS, CRIT, damage, ASPD, monster HP and death
-2. NK-007 — EXP, Level Up and Status Points
-3. NK-008 — Ground Loot, walk-to-loot, pickup and Weight
-4. NK-009 — Minimal Auto Battle using the shared authoritative pathway
-5. NK-010 — Return Bell
+1. NK-009 — Ground Loot, walk-to-loot, pickup and Weight
+2. NK-010 — Minimal Auto Battle using the shared authoritative pathway
+3. NK-011 — Return Bell
 
 ## Blocked / Later
 
@@ -102,6 +102,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-006/007/008 | 4× map, authoritative combat, monster retaliation, and progression moved to User Testing | Sol / Terra | pending push |
 | 2026-09-20 | NK-005 | SR unblocked; moved to Ready | Sol | pending push |
 | 2026-09-20 | NK-004 | User accepted Monster Roaming; moved to Done | User / Sol | `e948f03` |
 | 2026-09-20 | NK-004 | Implemented; moved to User Testing | Terra | `e948f03` |

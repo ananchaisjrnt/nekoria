@@ -14,3 +14,6 @@ export const GREEN_SLIME = {
   kind: "weak",
   maxHp: 66,
 } as const satisfies MonsterDefinition;
+
+export const expForNextLevel = (level: number): number => 60 + (level - 1) * 40;
+export const statusPointsForLevel = (newLevel: number): number => newLevel === 50 ? 8 : 3 + Math.floor(newLevel / 10);

@@ -1,6 +1,18 @@
 # NEKORIA — SYSTEM REQUIREMENTS HANDOFF
 
-Status: SR-004 Monster Roaming accepted; SR-005 issued
+Status: SR-005 accepted; combined SR-006/007/008 implemented and awaiting user testing
+
+## Current test build — SR-006/007/008
+
+- Paw Meadow is now 104×88, four times the original ground area.
+- Five Green Slimes are distributed across the expanded field.
+- Basic Attack uses the NestJS WebSocket combat pathway for timing, HIT, MISS, CRIT, damage, monster HP/death, retaliation damage, EXP, Level Up, and Status Points.
+- A monster stops roaming and faces the player after being attacked; it resumes roaming after combat inactivity.
+- The HUD exposes Base Level, HP, EXP, and unused Status Points for verification.
+- Desktop: select a slime and press ATK, or double-click the slime to approach and attack.
+- Mobile: move with the joystick; nearby slimes lock automatically, but the player must press ATK.
+
+Known prototype limits: session state is in memory, movement/range authority is still client-side, dead monsters do not respawn, and the placeholder retaliation has no final attack animation.
 
 SR owner: Sol
 

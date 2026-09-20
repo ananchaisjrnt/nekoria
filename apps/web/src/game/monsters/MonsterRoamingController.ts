@@ -18,6 +18,9 @@ export class MonsterRoamingController {
   private state: RoamState = "idle";
   private idleRemaining: number;
   private destination: Vector3 | null = null;
+  private paused = false;
+  private engagementRemaining = 0;
+  private retaliationRemaining = 0;
 
   constructor(private readonly root: TransformNode, private readonly config: MonsterRoamingConfig, seed: number) {
     this.spawnOrigin = root.position.clone();
@@ -26,6 +29,17 @@ export class MonsterRoamingController {
   }
 
   update(deltaSeconds: number): void {
+    if (this.paused) {
+      this.engagementRemaining -= deltaSeconds;
+      this.retaliationRemaining = Math.max(0, this.retaliationRemaining - deltaSeconds);
+      const pulse = this.retaliationRemaining > 0 ? Math.sin(this.retaliationRemaining * 22) * 0.08 : 0;
+      this.setSquash(1 + pulse, 1 - pulse, deltaSeconds);
+      if (this.engagementRemaining <= 0) {
+        this.paused = false;
+        this.beginIdle();
+      }
+      return;
+    }
     if (this.state === "idle") {
       this.idleRemaining -= deltaSeconds;
       this.setSquash(1, 1, deltaSeconds);
@@ -48,6 +62,21 @@ export class MonsterRoamingController {
     const targetAngle = Math.atan2(-direction.x, -direction.z);
     this.root.rotation.y = this.lerpAngle(this.root.rotation.y, targetAngle, Math.min(1, 7 * deltaSeconds));
     this.setSquash(1.06, 0.92, deltaSeconds);
+  }
+
+  engage(attackerPosition: Vector3): void {
+    this.paused = true;
+    this.engagementRemaining = 6;
+    this.retaliationRemaining = 0.45;
+    this.destination = null;
+    const toAttacker = attackerPosition.subtract(this.root.position);
+    this.root.rotation.y = Math.atan2(-toAttacker.x, -toAttacker.z);
+  }
+
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    this.engagementRemaining = paused ? Number.POSITIVE_INFINITY : 0;
+    if (paused) this.destination = null;
   }
 
   private beginMove(): void {

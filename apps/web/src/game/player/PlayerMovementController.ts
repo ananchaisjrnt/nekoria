@@ -40,9 +40,9 @@ export class PlayerMovementController {
 
   private setDestination(point: Vector3, emitIntent: boolean): void {
     this.destination = new Vector3(
-      Scalar.Clamp(point.x, -25, 25),
+      Scalar.Clamp(point.x, -50, 50),
       0,
-      Scalar.Clamp(point.z, -21, 21),
+      Scalar.Clamp(point.z, -42, 42),
     );
     if (emitIntent) {
       this.moveSequence += 1;
@@ -83,8 +83,8 @@ export class PlayerMovementController {
 
     if (this.velocity.lengthSquared() < 0.0025) this.velocity.setAll(0);
     this.player.position.addInPlace(this.velocity.scale(deltaSeconds));
-    this.player.position.x = Scalar.Clamp(this.player.position.x, -25, 25);
-    this.player.position.z = Scalar.Clamp(this.player.position.z, -21, 21);
+    this.player.position.x = Scalar.Clamp(this.player.position.x, -50, 50);
+    this.player.position.z = Scalar.Clamp(this.player.position.z, -42, 42);
 
     if (this.velocity.lengthSquared() > 0.04) {
       const targetAngle = Math.atan2(-this.velocity.x, -this.velocity.z);
