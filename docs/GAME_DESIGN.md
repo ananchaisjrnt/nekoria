@@ -181,6 +181,13 @@ Equipment/Soul bonuses do not affect upgrade cost. Only Base Stat determines cos
 
 Hybrid Target Combat: Basic Attack and single-target skills lock target; AoE is non-target/ground/directional per skill. Selection locks the monster. If out of range, the character automatically approaches, then attacks according to ASPD until the target dies, changes, or attack is cancelled. Archer stops at bow range. Lock Target does not guarantee hit; HIT/FLEE remains server-calculated.
 
+Platform input behavior:
+
+- Desktop: single-click a monster to lock it. Press ATK or double-click the monster to issue Basic Attack. If out of range, the character automatically approaches before attacking.
+- Mobile: the virtual joystick remains the primary movement control. Moving near a monster may softly lock the nearest eligible monster, but never starts combat by itself. The player must press ATK or a skill. If out of range, that command automatically approaches before executing.
+- Manual target selection takes priority over proximity targeting. Proximity targeting must not repeatedly replace an existing valid target.
+- Merely walking near or past a monster never attacks it.
+
 ## 16. BASIC ATTACK PHILOSOPHY — LOCKED
 
 Basic Attack is a real build, not filler, and remains viable through endgame. Skill builds gain burst/AoE/CC/utility. Auto builds gain sustained DPS, low SP use, ASPD, CRIT, and on-hit mechanics.

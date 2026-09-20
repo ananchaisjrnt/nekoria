@@ -20,7 +20,13 @@ Acceptance owner: User
 
 ## Ready
 
-No card ready for implementation.
+### NK-004 — Monster Roaming
+
+- SR: `docs/SR_004_MONSTER_ROAMING.md`
+- Owner: Terra
+- Status: Ready for implementation
+- Scope: peaceful Green Slime idle roaming inside individual spawn leashes
+- Excludes: aggro, chase, attack, combat, server synchronization
 
 ## In Progress
 
@@ -28,15 +34,16 @@ No active card.
 
 ## User Testing
 
-### NK-003 — Lock Target
-
-- SR: `docs/SR_003_LOCK_TARGET.md`
-- Owner: User
-- Status: Awaiting deployed-build acceptance
-- Scope: select Green Slime, target ring, target HUD, clear/switch target
-- Excludes: approach, attack, damage, HP changes, death, EXP, loot, Auto Battle
+No card awaiting user testing.
 
 ## Done
+
+### NK-003 — Lock Target
+
+- Status: Accepted by user
+- Completed: 2026-09-20
+- Features: stable monster IDs, click/tap selection, target ring, responsive target HUD, clear/switch target
+- Commit: `62601fb`
 
 ### NK-002 — Player Movement v0.2
 
@@ -64,12 +71,12 @@ No active card.
 
 These cards are not authorized for implementation until Sol issues an SR.
 
-1. NK-004 — Basic Attack and automatic approach
-2. NK-005 — Server-authoritative HIT, MISS, CRIT, damage, ASPD, monster HP and death
-3. NK-006 — EXP, Level Up and Status Points
-4. NK-007 — Ground Loot, walk-to-loot, pickup and Weight
-5. NK-008 — Minimal Auto Battle using the shared authoritative pathway
-6. NK-009 — Return Bell
+1. NK-005 — Basic Attack, automatic approach, and mobile proximity lock (SR written; blocked by NK-004 acceptance)
+2. NK-006 — Server-authoritative HIT, MISS, CRIT, damage, ASPD, monster HP and death
+3. NK-007 — EXP, Level Up and Status Points
+4. NK-008 — Ground Loot, walk-to-loot, pickup and Weight
+5. NK-009 — Minimal Auto Battle using the shared authoritative pathway
+6. NK-010 — Return Bell
 
 ## Blocked / Later
 
@@ -89,6 +96,9 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-005 | SR written; queued behind NK-004 | Sol | pending push |
+| 2026-09-20 | NK-004 | SR issued; moved to Ready | Sol | pending push |
+| 2026-09-20 | NK-003 | User accepted Lock Target; moved to Done | User / Sol | `62601fb` |
 | 2026-09-20 | NK-003 | Implemented; moved to User Testing | Terra | `62601fb` |
 | 2026-09-20 | NK-003 | SR issued; moved to Ready | Sol | `5212705` |
 | 2026-09-20 | NK-002 | Movement accepted after joystick-axis fix | User / Sol | `777e04e` |
