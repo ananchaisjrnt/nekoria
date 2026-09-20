@@ -153,3 +153,4 @@ Terra must report:
 - The spawn benchmark now includes a curved path, stream, bridge cue, tree/bush clusters, grass tufts, fences, improved lighting, soft fog, and a larger Giant Tree landmark.
 - Adventurer implements procedural Idle, Run, Basic Attack, and Hit motion. Green Slime implements idle squash, roaming hop, attack, hit flash, and the existing death animation.
 - Automated production-page loading was verified, but the available cloud QA browser has no WebGL support. Final visual acceptance must be performed on the user's WebGL-capable mobile device or PC.
+- Rocks, tree trunks, bush clusters, and fences register gameplay obstacles used by both player movement and monster roaming. Paths, water surfaces, and the bridge remain intentionally traversable.

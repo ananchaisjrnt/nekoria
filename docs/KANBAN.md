@@ -110,6 +110,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-009 | Added shared collision registry for rocks, trees, bushes, and fences | Terra | pending push |
 | 2026-09-20 | NK-009 | Implemented and moved to User Testing | Terra | `60c14d2` |
 | 2026-09-20 | NK-009 | Visual Benchmark SR issued and moved to Ready | Sol | pending push |
 | 2026-09-20 | NK-006/007/008 | User accepted map, combat, and progression milestone | User / Sol | `ffa9bf4` |

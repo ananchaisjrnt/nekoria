@@ -51,6 +51,12 @@ interface MonsterEntity {
   readonly visual: GreenSlimeVisual;
 }
 
+interface CircularObstacle {
+  readonly x: number;
+  readonly z: number;
+  readonly radius: number;
+}
+
 export class PawMeadowScene {
   private readonly engine: Engine;
   private readonly scene: Scene;
@@ -61,6 +67,7 @@ export class PawMeadowScene {
   private readonly monsters = new Map<string, MonsterEntity>();
   private readonly monsterRoaming: MonsterRoamingController[] = [];
   private readonly roamingByEntity = new Map<string, MonsterRoamingController>();
+  private readonly obstacles: CircularObstacle[] = [];
   private readonly attack: BasicAttackController;
   private readonly connection: GameConnection;
   private activeTargetId: string | null = null;
@@ -414,6 +421,7 @@ export class PawMeadowScene {
       leaf.material = this.mat(`bush-material-${part % 2}`, part % 2 ? "#3f844b" : "#58a052");
       leaf.isPickable = false;
     }
+    this.addObstacle(position.x, position.z, 1);
   }
 
   private createFence(start: Vector3, count: number, spacing: number, angle: number): void {
@@ -427,12 +435,17 @@ export class PawMeadowScene {
       post.position = new Vector3(x, y + 0.78, z);
       post.material = wood;
       post.isPickable = false;
+      this.addObstacle(x, z, 0.62);
       if (index === count - 1) continue;
       const rail = MeshBuilder.CreateBox(`fence-rail-${start.x}-${index}`, { width: spacing, height: 0.16, depth: 0.16 }, this.scene);
       rail.position = new Vector3(x + direction.x * spacing * 0.5, y + 0.88, z + direction.z * spacing * 0.5);
       rail.rotation.y = -angle;
       rail.material = wood;
       rail.isPickable = false;
+      for (let sample = 1; sample <= 4; sample += 1) {
+        const amount = sample / 5;
+        this.addObstacle(x + direction.x * spacing * amount, z + direction.z * spacing * amount, 0.48);
+      }
     }
   }
 
@@ -443,6 +456,7 @@ export class PawMeadowScene {
     rock.rotation.y = position.x * 0.17;
     rock.material = this.mat("ridge-rock-mat", "#71806d");
     rock.isPickable = false;
+    this.addObstacle(position.x, position.z, Math.max(1.4, size * 0.82));
   }
 
   private tree(name: string, position: Vector3): void {
@@ -459,6 +473,7 @@ export class PawMeadowScene {
       crown.isPickable = false;
     }
     trunk.isPickable = false;
+    this.addObstacle(position.x, position.z, 1.15);
   }
 
   private giantTree(position: Vector3): void {
@@ -475,6 +490,7 @@ export class PawMeadowScene {
       crown.isPickable = false;
     }
     trunk.isPickable = false;
+    this.addObstacle(position.x, position.z, 4.8);
   }
 
   private createAdventurer(): TransformNode {
@@ -524,7 +540,11 @@ export class PawMeadowScene {
 
   private isPlayerWalkable(x: number, z: number): boolean {
     if (x < -246 || x > 246 || z < -246 || z > 246) return false;
-    return !rockBarriers.some((rock) => Math.hypot(x - rock.x, z - rock.z) < 2.35);
+    return !this.obstacles.some((obstacle) => Math.hypot(x - obstacle.x, z - obstacle.z) < obstacle.radius);
+  }
+
+  private addObstacle(x: number, z: number, radius: number): void {
+    this.obstacles.push({ x, z, radius });
   }
 
   private terrainHeightAt(x: number, z: number): number {
