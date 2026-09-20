@@ -7,12 +7,15 @@ import {
   Engine,
   HemisphericLight,
   MeshBuilder,
+  PointerEventTypes,
   Scene,
   ShadowGenerator,
   StandardMaterial,
   TransformNode,
   Vector3,
 } from "@babylonjs/core";
+import type { MovementInput } from "./input/MovementInput";
+import { PlayerMovementController } from "./player/PlayerMovementController";
 
 const palette = {
   grass: "#78b85c", darkGrass: "#4f8a45", path: "#d7b678", water: "#61b8d2",
@@ -23,20 +26,29 @@ const palette = {
 export class PawMeadowScene {
   private readonly engine: Engine;
   private readonly scene: Scene;
+  private readonly camera: ArcRotateCamera;
+  private readonly player: TransformNode;
+  private readonly movement: PlayerMovementController;
+  private pointerDown: { x: number; y: number } | null = null;
 
-  constructor(private readonly canvas: HTMLCanvasElement) {
+  constructor(private readonly canvas: HTMLCanvasElement, input: MovementInput) {
     this.engine = new Engine(canvas, true, { antialias: true, adaptToDeviceRatio: true });
     this.scene = new Scene(this.engine);
     this.scene.clearColor = new Color4(0.62, 0.84, 0.96, 1);
-    this.createCamera();
+    this.camera = this.createCamera();
     const shadows = this.createLights();
     this.createMeadow();
-    this.createAdventurer(shadows);
+    this.player = this.createAdventurer(shadows);
+    this.movement = new PlayerMovementController(this.player, this.camera, input);
     this.createSlimes(shadows);
+    this.setupClickToMove();
   }
 
   start(): void {
-    this.engine.runRenderLoop(() => this.scene.render());
+    this.engine.runRenderLoop(() => {
+      this.movement.update(Math.min(this.engine.getDeltaTime() / 1000, 0.05));
+      this.scene.render();
+    });
     window.addEventListener("resize", this.resize);
   }
 
@@ -49,7 +61,7 @@ export class PawMeadowScene {
 
   private readonly resize = (): void => this.engine.resize();
 
-  private createCamera(): void {
+  private createCamera(): ArcRotateCamera {
     const camera = new ArcRotateCamera("mmorpg-camera", -Math.PI / 3.7, Math.PI / 3.15, 25, new Vector3(0, 2.2, 1), this.scene);
     camera.attachControl(this.canvas, true);
     camera.lowerBetaLimit = 0.7;
@@ -59,6 +71,23 @@ export class PawMeadowScene {
     camera.wheelPrecision = 28;
     camera.panningSensibility = 0;
     camera.inertia = 0.82;
+    return camera;
+  }
+
+  private setupClickToMove(): void {
+    this.scene.onPointerObservable.add((pointerInfo) => {
+      const event = pointerInfo.event;
+      if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
+        this.pointerDown = { x: event.clientX, y: event.clientY };
+        return;
+      }
+      if (pointerInfo.type !== PointerEventTypes.POINTERUP || !this.pointerDown) return;
+      const travel = Math.hypot(event.clientX - this.pointerDown.x, event.clientY - this.pointerDown.y);
+      this.pointerDown = null;
+      if (travel > 10) return;
+      const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => mesh.name === "paw-meadow");
+      if (pick?.hit && pick.pickedPoint) this.movement.moveTo(pick.pickedPoint);
+    });
   }
 
   private createLights(): ShadowGenerator {
@@ -84,11 +113,13 @@ export class PawMeadowScene {
     path.position = new Vector3(-4.5, 0.025, 0);
     path.rotation.y = -0.18;
     path.material = this.mat("path", palette.path);
+    path.isPickable = false;
 
     const stream = MeshBuilder.CreateGround("stream", { width: 4.2, height: 48 }, this.scene);
     stream.position = new Vector3(13, 0.04, 0);
     stream.rotation.y = 0.12;
     stream.material = this.mat("water", palette.water, 0.8);
+    stream.isPickable = false;
 
     this.hill(new Vector3(-18, 1.2, -12), new Vector3(14, 3.4, 11));
     this.hill(new Vector3(18, 1, 11), new Vector3(16, 2.8, 10));
@@ -133,7 +164,7 @@ export class PawMeadowScene {
     crown.material = this.mat("giant-leaves", "#4b9d58");
   }
 
-  private createAdventurer(shadows: ShadowGenerator): void {
+  private createAdventurer(shadows: ShadowGenerator): TransformNode {
     const root = new TransformNode("adventurer", this.scene);
     root.position = new Vector3(-1.5, 0, -1);
     root.rotation.y = -0.35;
@@ -151,6 +182,7 @@ export class PawMeadowScene {
     tail.parent = root; tail.position = new Vector3(0.55, 1.35, 0.42); tail.scaling.y = 1.25; tail.rotation = new Vector3(0.2, 1.15, -0.4); tail.material = this.mat("tail-mat", palette.fur);
     root.getChildMeshes().forEach((mesh) => shadows.addShadowCaster(mesh));
     this.idle(root, 0.035, 2.2);
+    return root;
   }
 
   private ear(root: TransformNode, x: number): void {

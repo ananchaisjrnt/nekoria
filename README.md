@@ -4,9 +4,11 @@ Cute Fantasy 3D Web MMORPG featuring anthropomorphic cat adventurers.
 
 ## Current milestone
 
-Paw Meadow Visual Prototype v0.1: Babylon.js scene, elevated 3/4 MMORPG camera, placeholder Adventurer cat, Green Slimes, Giant Tree landmark, minimal HUD, and a responsive desktop/mobile control shell.
+Paw Meadow Movement Prototype v0.2: Babylon.js scene, elevated 3/4 MMORPG camera, placeholder Adventurer cat, Green Slimes, Giant Tree landmark, minimal HUD, and responsive desktop/mobile movement.
 
-Gameplay controls are displayed but intentionally become functional one tested system at a time, beginning with movement.
+Movement is the first functional gameplay system. Click or tap walkable ground to move there, or use the on-screen joystick on desktop/mobile. Drag the world to rotate the camera and use the mouse wheel or pinch gesture to zoom.
+
+Combat, skills, targeting, and Auto Battle remain intentionally disabled until their individual test milestones.
 
 ## Requirements
 
