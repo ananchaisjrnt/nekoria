@@ -97,7 +97,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
-| 2026-09-20 | NK-004 | Implemented; moved to User Testing | Terra | pending push |
+| 2026-09-20 | NK-004 | Implemented; moved to User Testing | Terra | `e948f03` |
 | 2026-09-20 | NK-005 | SR written; queued behind NK-004 | Sol | `d7d91a7` |
 | 2026-09-20 | NK-004 | SR issued; moved to Ready | Sol | `d7d91a7` |
 | 2026-09-20 | NK-003 | User accepted Lock Target; moved to Done | User / Sol | `62601fb` |
