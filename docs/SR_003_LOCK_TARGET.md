@@ -24,7 +24,8 @@ Before implementation, read completely:
 2. `docs/GAME_DESIGN.md`
 3. `docs/ART_DIRECTION.md`
 4. `docs/SR_HANDOFF.md`
-5. this SR
+5. `docs/KANBAN.md`
+6. this SR
 
 Use approved references in `docs/references/` for presentation direction.
 
@@ -152,4 +153,3 @@ Terra must report:
 - commit SHA and push/deployment status
 
 After handoff, stop. Do not begin Basic Attack. The user must test the deployed Lock Target build before Sol issues the next SR.
-

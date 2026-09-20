@@ -29,6 +29,7 @@ Before changing gameplay or visuals, read completely:
 1. `docs/GAME_DESIGN.md`
 2. `docs/ART_DIRECTION.md`
 3. `AGENTS.md`
+4. `docs/KANBAN.md`
 
 Approved visual references are in `docs/references/`. Do not substitute generic chibi, realistic fantasy, or generic mobile MMORPG styling.
 
