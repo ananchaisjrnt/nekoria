@@ -1,6 +1,6 @@
 # NEKORIA — SYSTEM REQUIREMENTS HANDOFF
 
-Status: Movement Prototype v0.2
+Status: Movement Prototype v0.2 accepted; SR-003 Lock Target issued
 
 SR owner: Sol
 
@@ -109,6 +109,8 @@ The current build emits a Babylon.js bundle-size warning. It is non-blocking for
 - Keep the server authoritative for future gameplay. The client sends intents and never decides combat results.
 - Manual and Auto Battle must eventually use the same authoritative gameplay pathway.
 
-## 7. Next system
+## 7. Active system
 
-The next system is deliberately uncommitted until the user accepts movement. Lock Target and Basic Attack are later priorities in `GAME_DESIGN.md`, but Terra must wait until Sol issues the next SR after user acceptance.
+Movement v0.2 was accepted by the user. Sol has issued `docs/SR_003_LOCK_TARGET.md` for Terra.
+
+Terra may implement only SR-003. Basic Attack remains blocked until the user tests and accepts the deployed Lock Target build and Sol issues another SR.
