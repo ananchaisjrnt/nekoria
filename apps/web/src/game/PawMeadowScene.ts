@@ -251,13 +251,13 @@ export class PawMeadowScene {
     if (this.proximityCheckElapsed < 0.18) return;
     this.proximityCheckElapsed = 0;
     const active = this.activeTargetId ? this.monsters.get(this.activeTargetId) : null;
-    if (active && this.targetSource === "proximity" && Vector3.Distance(active.root.position, this.player.position) > 8) this.clearTarget();
+    if (active && this.targetSource === "proximity" && this.horizontalDistance(active.root.position, this.player.position) > 8) this.clearTarget();
     if (this.activeTargetId) return;
     let nearest: MonsterEntity | undefined;
     let nearestDistance = 5;
     for (const monster of this.monsters.values()) {
       if (!monster.root.isEnabled() || monster.summary.currentHp <= 0) continue;
-      const distance = Vector3.Distance(monster.root.position, this.player.position);
+      const distance = this.horizontalDistance(monster.root.position, this.player.position);
       if (distance < nearestDistance) { nearest = monster; nearestDistance = distance; }
     }
     if (nearest) this.selectTarget(nearest.entityId, "proximity");
@@ -457,6 +457,10 @@ export class PawMeadowScene {
       + terrace(128, 142, 86, 70, 6.5)
       + terrace(-158, -132, 78, 64, 4.8)
       + terrace(-176, 152, 64, 58, 7.5);
+  }
+
+  private horizontalDistance(a: Vector3, b: Vector3): number {
+    return Math.hypot(a.x - b.x, a.z - b.z);
   }
 
   private idle(target: TransformNode, distance: number, speed: number): void {
