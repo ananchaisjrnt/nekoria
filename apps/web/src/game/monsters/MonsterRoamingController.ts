@@ -19,6 +19,7 @@ export class MonsterRoamingController {
   private idleRemaining: number;
   private destination: Vector3 | null = null;
   private paused = false;
+  private dead = false;
   private engagementRemaining = 0;
   private retaliationRemaining = 0;
 
@@ -29,6 +30,7 @@ export class MonsterRoamingController {
   }
 
   update(deltaSeconds: number): void {
+    if (this.dead) return;
     if (this.paused) {
       this.engagementRemaining -= deltaSeconds;
       this.retaliationRemaining = Math.max(0, this.retaliationRemaining - deltaSeconds);
@@ -77,6 +79,12 @@ export class MonsterRoamingController {
     this.paused = paused;
     this.engagementRemaining = paused ? Number.POSITIVE_INFINITY : 0;
     if (paused) this.destination = null;
+  }
+
+  die(): void {
+    this.dead = true;
+    this.paused = true;
+    this.destination = null;
   }
 
   private beginMove(): void {

@@ -71,7 +71,15 @@ export class PawMeadowScene {
     this.createSlimes(shadows);
     this.targetRing = this.createTargetRing();
     this.connection = new GameConnection((result) => this.handleCombatResult(result));
-    this.attack = new BasicAttackController(this.player, this.movement, (id) => this.monsters.get(id)?.root ?? null, (id) => this.connection.attack(id));
+    this.attack = new BasicAttackController(
+      this.player,
+      this.movement,
+      (id) => {
+        const root = this.monsters.get(id)?.root;
+        return root?.isEnabled() ? root : null;
+      },
+      (id) => this.connection.attack(id),
+    );
     this.setupClickToMove();
     this.canvas.addEventListener("dblclick", this.handleDoubleClick);
     window.addEventListener("keydown", this.handleKeyDown);
@@ -106,7 +114,7 @@ export class PawMeadowScene {
   };
 
   clearTarget(): void {
-    if (!this.targetRing.isEnabled()) return;
+    if (!this.activeTargetId) return;
     this.targetRing.setEnabled(false);
     this.targetRing.parent = null;
     this.activeTargetId = null;
@@ -125,12 +133,32 @@ export class PawMeadowScene {
     if (monster) {
       monster.summary = { ...monster.summary, currentHp: result.targetHp };
       const roaming = this.roamingByEntity.get(result.targetEntityId);
-      if (result.targetDead) roaming?.setPaused(true);
+      if (result.targetDead) roaming?.die();
       else roaming?.engage(this.player.position);
-      if (result.targetDead) { monster.root.setEnabled(false); if (this.activeTargetId === result.targetEntityId) this.clearTarget(); }
+      if (result.targetDead) {
+        if (this.activeTargetId === result.targetEntityId) this.clearTarget();
+        this.playMonsterDeath(monster.root);
+      }
       else if (this.activeTargetId === result.targetEntityId) this.onTargetChange(monster.summary);
     }
     this.onCombatResult(result);
+  }
+
+  private playMonsterDeath(monster: TransformNode): void {
+    this.scene.stopAnimation(monster);
+    Animation.CreateAndStartAnimation(
+      `${monster.name}-death`,
+      monster,
+      "scaling",
+      30,
+      18,
+      monster.scaling.clone(),
+      new Vector3(1.35, 0.05, 1.35),
+      Animation.ANIMATIONLOOPMODE_CONSTANT,
+      undefined,
+      () => monster.setEnabled(false),
+      this.scene,
+    );
   }
 
   private readonly handleDoubleClick = (): void => {
