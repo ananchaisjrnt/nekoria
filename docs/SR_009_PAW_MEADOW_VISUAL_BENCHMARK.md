@@ -1,6 +1,6 @@
 # NEKORIA — SR-009 PAW MEADOW VISUAL BENCHMARK
 
-Status: User Testing
+Status: Accepted
 
 Owner: Sol
 

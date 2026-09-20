@@ -28,14 +28,16 @@ No active card.
 
 ## User Testing
 
-### NK-009 — Paw Meadow Visual Benchmark
-
-- Status: Awaiting deployed-build acceptance
-- Scope: polished 80×80 spawn zone, upgraded Adventurer/Slime placeholders, procedural animation, clustered environment dressing, lighting, fog, and Giant Tree landmark
-- Assets: procedural Babylon.js only; no external asset license required
-- Commit: `60c14d2`
+No card awaiting user testing.
 
 ## Done
+
+### NK-009 — Paw Meadow Visual Benchmark
+
+- Status: Accepted by user
+- Scope: polished 80×80 spawn zone, upgraded Adventurer/Slime placeholders, procedural animation, clustered environment dressing, lighting, fog, Giant Tree landmark, and shared prop collision
+- Assets: procedural Babylon.js only; no external asset license required
+- Commits: `60c14d2`, `1350d9c`
 
 ### NK-006 / NK-007 / NK-008 — Map, Combat, Progression
 
@@ -110,6 +112,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-009 | User accepted Visual Benchmark and collision follow-up; moved to Done | User / Sol | `1350d9c` |
 | 2026-09-20 | NK-009 | Added shared collision registry for rocks, trees, bushes, and fences | Terra | pending push |
 | 2026-09-20 | NK-009 | Implemented and moved to User Testing | Terra | `60c14d2` |
 | 2026-09-20 | NK-009 | Visual Benchmark SR issued and moved to Ready | Sol | pending push |
