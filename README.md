@@ -4,7 +4,7 @@ Cute Fantasy 3D Web MMORPG featuring anthropomorphic cat adventurers.
 
 ## Current milestone
 
-Paw Meadow Combat Prototype v0.4: a 500×500 layered Babylon.js field, elevated 3/4 MMORPG camera, desktop/mobile movement, lock target, server-authoritative basic attacks, monster retaliation, EXP, Level Up, and Status Points.
+Paw Meadow Visual Benchmark v0.5: a 500×500 layered Babylon.js field with a polished 80×80 spawn zone, procedural cat Adventurer and Green Slime models, prototype animation, clustered environment dressing, elevated 3/4 MMORPG camera, desktop/mobile movement, lock target, server-authoritative combat, EXP, Level Up, and Status Points.
 
 Click or tap walkable ground to move there, or use the on-screen joystick on desktop/mobile. Click or tap a Green Slime to lock it as the current target. Drag the world to rotate the camera and use the mouse wheel or pinch gesture to zoom.
 

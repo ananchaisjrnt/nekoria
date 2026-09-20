@@ -20,11 +20,7 @@ Acceptance owner: User
 
 ## Ready
 
-### NK-009 — Paw Meadow Visual Benchmark
-
-- Status: Ready for Terra
-- SR: `docs/SR_009_PAW_MEADOW_VISUAL_BENCHMARK.md`
-- Scope: polished 80×80 spawn zone, upgraded Adventurer/Slime placeholders, animation, terrain composition, environment dressing, lighting, and mobile-safe performance
+No card ready for implementation.
 
 ## In Progress
 
@@ -32,7 +28,12 @@ No active card.
 
 ## User Testing
 
-No card awaiting user testing.
+### NK-009 — Paw Meadow Visual Benchmark
+
+- Status: Awaiting deployed-build acceptance
+- Scope: polished 80×80 spawn zone, upgraded Adventurer/Slime placeholders, procedural animation, clustered environment dressing, lighting, fog, and Giant Tree landmark
+- Assets: procedural Babylon.js only; no external asset license required
+- Commit: `60c14d2`
 
 ## Done
 
@@ -109,6 +110,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-009 | Implemented and moved to User Testing | Terra | `60c14d2` |
 | 2026-09-20 | NK-009 | Visual Benchmark SR issued and moved to Ready | Sol | pending push |
 | 2026-09-20 | NK-006/007/008 | User accepted map, combat, and progression milestone | User / Sol | `ffa9bf4` |
 | 2026-09-20 | NK-007 | Fixed elevation targeting and isolated monster HP per WebSocket session | Sol / Terra | pending push |

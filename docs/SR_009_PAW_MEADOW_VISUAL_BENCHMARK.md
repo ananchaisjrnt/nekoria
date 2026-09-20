@@ -1,6 +1,6 @@
 # NEKORIA — SR-009 PAW MEADOW VISUAL BENCHMARK
 
-Status: Ready
+Status: User Testing
 
 Owner: Sol
 
@@ -146,3 +146,10 @@ Terra must report:
 - Validation results
 - Commit SHA and deployed URL
 
+## Implementation notes
+
+- Adventurer and Green Slime are procedural Babylon.js placeholder models; no external art assets or licenses were added.
+- Gameplay roots remain separate from visual model roots.
+- The spawn benchmark now includes a curved path, stream, bridge cue, tree/bush clusters, grass tufts, fences, improved lighting, soft fog, and a larger Giant Tree landmark.
+- Adventurer implements procedural Idle, Run, Basic Attack, and Hit motion. Green Slime implements idle squash, roaming hop, attack, hit flash, and the existing death animation.
+- Automated production-page loading was verified, but the available cloud QA browser has no WebGL support. Final visual acceptance must be performed on the user's WebGL-capable mobile device or PC.
