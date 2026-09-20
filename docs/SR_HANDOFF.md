@@ -14,6 +14,8 @@ Status: SR-005 accepted; combined SR-006/007/008 implemented and awaiting user t
 
 Known prototype limits: session state is in memory, movement/range authority is still client-side, dead monsters do not respawn, and the placeholder retaliation has no final attack animation.
 
+Production hotfix: Render injects the server's private hostname into the static-site build. The web client converts that hostname to its public `onrender.com` address before opening the WebSocket, so browser and mobile clients can receive authoritative combat results.
+
 SR owner: Sol
 
 Target implementer: Terra

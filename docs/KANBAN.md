@@ -102,6 +102,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-007 | Fixed Render internal-host WebSocket URL used by browser clients | Sol / Terra | pending push |
 | 2026-09-20 | NK-006/007/008 | 4× map, authoritative combat, monster retaliation, and progression moved to User Testing | Sol / Terra | pending push |
 | 2026-09-20 | NK-005 | SR unblocked; moved to Ready | Sol | pending push |
 | 2026-09-20 | NK-004 | User accepted Monster Roaming; moved to Done | User / Sol | `e948f03` |

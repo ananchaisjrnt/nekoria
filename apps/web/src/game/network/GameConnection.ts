@@ -11,8 +11,11 @@ export class GameConnection {
   connect(): void {
     this.disposed = false;
     const configured = import.meta.env.VITE_GAME_SERVER_URL as string | undefined;
-    const raw = configured ?? (import.meta.env.PROD ? "wss://nekoria-server.onrender.com" : "ws://localhost:3001");
-    const base = raw.startsWith("ws://") || raw.startsWith("wss://") ? raw : `wss://${raw}`;
+    const raw = configured ?? (import.meta.env.PROD ? "nekoria-server" : "ws://localhost:3001");
+    const publicHost = import.meta.env.PROD && !raw.includes("://") && !raw.includes(".")
+      ? `${raw}.onrender.com`
+      : raw;
+    const base = publicHost.startsWith("ws://") || publicHost.startsWith("wss://") ? publicHost : `wss://${publicHost}`;
     this.socket = new WebSocket(`${base.replace(/\/$/, "")}/game`);
     this.socket.addEventListener("message", (event) => {
       const message = JSON.parse(String(event.data)) as { event?: string; data?: CombatResultPayload };
