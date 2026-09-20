@@ -20,7 +20,11 @@ Acceptance owner: User
 
 ## Ready
 
-No card ready for implementation.
+### NK-009 — Paw Meadow Visual Benchmark
+
+- Status: Ready for Terra
+- SR: `docs/SR_009_PAW_MEADOW_VISUAL_BENCHMARK.md`
+- Scope: polished 80×80 spawn zone, upgraded Adventurer/Slime placeholders, animation, terrain composition, environment dressing, lighting, and mobile-safe performance
 
 ## In Progress
 
@@ -28,12 +32,15 @@ No active card.
 
 ## User Testing
 
-### NK-006 / NK-007 / NK-008 — Map, Combat, Progression
-
-- Status: Awaiting combined deployed-build acceptance
-- Scope: 4× map area, authoritative combat results, monster engagement, EXP/Level/Status Points
+No card awaiting user testing.
 
 ## Done
+
+### NK-006 / NK-007 / NK-008 — Map, Combat, Progression
+
+- Status: Accepted by user
+- Features: 500×500 layered field, authoritative combat results, monster engagement/death lifecycle, EXP/Level/Status Points, elevation combat fixes
+- Latest fix commit: `ffa9bf4`
 
 ### NK-005 — Basic Attack and Auto Approach
 
@@ -80,9 +87,9 @@ No active card.
 
 These cards are not authorized for implementation until Sol issues an SR.
 
-1. NK-009 — Ground Loot, walk-to-loot, pickup and Weight
-2. NK-010 — Minimal Auto Battle using the shared authoritative pathway
-3. NK-011 — Return Bell
+1. NK-010 — Ground Loot, walk-to-loot, pickup and Weight
+2. NK-011 — Minimal Auto Battle using the shared authoritative pathway
+3. NK-012 — Return Bell
 
 ## Blocked / Later
 
@@ -102,6 +109,8 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-009 | Visual Benchmark SR issued and moved to Ready | Sol | pending push |
+| 2026-09-20 | NK-006/007/008 | User accepted map, combat, and progression milestone | User / Sol | `ffa9bf4` |
 | 2026-09-20 | NK-007 | Fixed elevation targeting and isolated monster HP per WebSocket session | Sol / Terra | pending push |
 | 2026-09-20 | NK-006 | Expanded Paw Meadow to 500×500 and increased visible elevation layers | Sol / Terra | pending push |
 | 2026-09-20 | NK-007 | Dispose dead monster entities and remove their controllers after death animation | Sol / Terra | pending push |
