@@ -1,8 +1,26 @@
 # NEKORIA — SYSTEM REQUIREMENTS HANDOFF
 
-Status: Movement Prototype v0.2  
-Target implementer: Terra  
-Development method: implement and test one system at a time
+Status: Movement Prototype v0.2
+
+SR owner: Sol
+
+Target implementer: Terra
+
+Acceptance owner: User
+
+Development method: Sol assigns one system, Terra implements it, and the user tests it before Sol assigns the next system.
+
+## 0. Locked workflow
+
+The development workflow is:
+
+1. Sol defines and issues the SR, scope, constraints, and acceptance criteria.
+2. Terra implements only the issued SR.
+3. Terra validates the implementation and hands it back without selecting or beginning another system.
+4. The user plays/tests the deployed build and decides whether it is accepted or needs revision.
+5. After user acceptance, Sol defines the next SR.
+
+Terra must not independently expand scope, redesign locked requirements, or begin a likely next milestone. Any ambiguity that could materially change behavior must be returned to Sol for a decision.
 
 ## 1. Required reading
 
@@ -93,5 +111,4 @@ The current build emits a Babylon.js bundle-size warning. It is non-blocking for
 
 ## 7. Next system
 
-The next system is deliberately uncommitted until the user accepts movement. The likely next milestone is Lock Target, followed by Basic Attack, but Terra must wait for an explicit instruction before implementation.
-
+The next system is deliberately uncommitted until the user accepts movement. Lock Target and Basic Attack are later priorities in `GAME_DESIGN.md`, but Terra must wait until Sol issues the next SR after user acceptance.
