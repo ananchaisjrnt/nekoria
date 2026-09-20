@@ -44,9 +44,9 @@ export class PlayerMovementController {
 
   private setDestination(point: Vector3, emitIntent: boolean): void {
     this.destination = new Vector3(
-      Scalar.Clamp(point.x, -76, 76),
+      Scalar.Clamp(point.x, -246, 246),
       this.terrainHeightAt(point.x, point.z),
-      Scalar.Clamp(point.z, -64, 64),
+      Scalar.Clamp(point.z, -246, 246),
     );
     if (emitIntent) {
       this.moveSequence += 1;
@@ -88,8 +88,8 @@ export class PlayerMovementController {
     if (this.velocity.lengthSquared() < 0.0025) this.velocity.setAll(0);
     const previous = this.player.position.clone();
     const next = this.player.position.add(this.velocity.scale(deltaSeconds));
-    next.x = Scalar.Clamp(next.x, -76, 76);
-    next.z = Scalar.Clamp(next.z, -64, 64);
+    next.x = Scalar.Clamp(next.x, -246, 246);
+    next.z = Scalar.Clamp(next.z, -246, 246);
     if (this.isWalkable(next.x, next.z)) {
       this.player.position.copyFrom(next);
     } else {

@@ -16,7 +16,7 @@ Known prototype limits: session state is in memory, movement/range authority is 
 
 Production hotfix: Render injects the server's private hostname into the static-site build. The web client converts that hostname to its public `onrender.com` address before opening the WebSocket, so browser and mobile clients can receive authoritative combat results.
 
-Terrain follow-up: Paw Meadow is expanded again to 160×136. Broad low terraces create multiple playable height layers, and rock ridges form short barriers that require manual route choices. Player and monster elevation follows the terrain surface. Dead monsters are excluded from mobile proximity targeting so death animations cannot relock an invalid target.
+Terrain follow-up: Paw Meadow is now 500×500. Broad terraces rise roughly 4–10 meters to create clearly readable playable layers, and rock ridges form short barriers that require manual route choices. Player and monster elevation follows the terrain surface. Dead monsters are excluded from mobile proximity targeting so death animations cannot relock an invalid target.
 
 SR owner: Sol
 

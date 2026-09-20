@@ -32,12 +32,14 @@ const palette = {
   leather: "#76503a", scarf: "#a94736", slime: "#8bdd70",
 };
 
-const MAP_HALF_WIDTH = 80;
-const MAP_HALF_HEIGHT = 68;
+const MAP_HALF_WIDTH = 250;
+const MAP_HALF_HEIGHT = 250;
 const rockBarriers = [
   new Vector3(-22, 0, -8), new Vector3(-18, 0, -4), new Vector3(-14, 0, 0),
   new Vector3(20, 0, 16), new Vector3(24, 0, 18), new Vector3(28, 0, 20),
   new Vector3(48, 0, -24), new Vector3(52, 0, -20),
+  new Vector3(-92, 0, 62), new Vector3(-87, 0, 66), new Vector3(-82, 0, 70),
+  new Vector3(112, 0, 78), new Vector3(117, 0, 75), new Vector3(122, 0, 72),
 ];
 
 interface MonsterEntity {
@@ -197,7 +199,7 @@ export class PawMeadowScene {
     camera.lowerBetaLimit = 0.7;
     camera.upperBetaLimit = 1.18;
     camera.lowerRadiusLimit = 14;
-    camera.upperRadiusLimit = 45;
+    camera.upperRadiusLimit = 58;
     camera.wheelPrecision = 28;
     camera.panningSensibility = 0;
     camera.inertia = 0.82;
@@ -288,7 +290,7 @@ export class PawMeadowScene {
   }
 
   private createMeadow(): void {
-    const ground = MeshBuilder.CreateGround("paw-meadow", { width: MAP_HALF_WIDTH * 2, height: MAP_HALF_HEIGHT * 2, subdivisions: 96, updatable: true }, this.scene);
+    const ground = MeshBuilder.CreateGround("paw-meadow", { width: MAP_HALF_WIDTH * 2, height: MAP_HALF_HEIGHT * 2, subdivisions: 160, updatable: true }, this.scene);
     const positions = ground.getVerticesData(VertexBuffer.PositionKind);
     if (positions) {
       for (let index = 0; index < positions.length; index += 3) {
@@ -301,26 +303,26 @@ export class PawMeadowScene {
     ground.material = this.mat("grass", palette.grass);
     ground.receiveShadows = true;
 
-    const path = MeshBuilder.CreateGround("main-path", { width: 8, height: 132 }, this.scene);
+    const path = MeshBuilder.CreateGround("main-path", { width: 10, height: 490 }, this.scene);
     path.position = new Vector3(-4.5, 0.025, 0);
     path.rotation.y = -0.18;
     path.material = this.mat("path", palette.path);
     path.isPickable = false;
 
-    const stream = MeshBuilder.CreateGround("stream", { width: 4.8, height: 136 }, this.scene);
+    const stream = MeshBuilder.CreateGround("stream", { width: 6, height: 490 }, this.scene);
     stream.position = new Vector3(13, 0.12, 0);
     stream.rotation.y = 0.12;
     stream.material = this.mat("water", palette.water, 0.8);
     stream.isPickable = false;
 
-    this.giantTree(new Vector3(45, 0, 48));
+    this.giantTree(new Vector3(145, 0, 168));
     rockBarriers.forEach((position, index) => this.rock(`ridge-rock-${index}`, position, 1.8 + (index % 3) * 0.35));
 
-    [new Vector3(-45, 0, -34), new Vector3(-58, 0, 18), new Vector3(60, 0, -38), new Vector3(54, 0, 34), new Vector3(-38, 0, 44), new Vector3(4, 0, -48), new Vector3(-66, 0, -10), new Vector3(68, 0, 12)].forEach((p, i) => this.tree(`tree-${i}`, p));
+    [new Vector3(-45, 0, -34), new Vector3(-96, 0, 48), new Vector3(88, 0, -62), new Vector3(105, 0, 76), new Vector3(-72, 0, 108), new Vector3(4, 0, -88), new Vector3(-164, 0, -42), new Vector3(178, 0, 32), new Vector3(-205, 0, 154), new Vector3(194, 0, -168), new Vector3(-132, 0, -176), new Vector3(64, 0, 194)].forEach((p, i) => this.tree(`tree-${i}`, p));
 
-    for (let i = 0; i < 170; i += 1) {
-      const x = ((i * 37) % 150) - 75;
-      const z = ((i * 53) % 126) - 63;
+    for (let i = 0; i < 420; i += 1) {
+      const x = ((i * 137) % 480) - 240;
+      const z = ((i * 193) % 480) - 240;
       if (Math.abs(x + 4.5) < 5 || Math.abs(x - 13) < 3) continue;
       const flower = MeshBuilder.CreateSphere(`flower-${i}`, { diameter: 0.18, segments: 6 }, this.scene);
       flower.position = new Vector3(x, this.terrainHeightAt(x, z) + 0.16, z);
@@ -393,7 +395,7 @@ export class PawMeadowScene {
   }
 
   private createSlimes(shadows: ShadowGenerator): void {
-    [new Vector3(5, 0, -2), new Vector3(9, 0, 6), new Vector3(-34, 0, 24), new Vector3(-55, 0, -28), new Vector3(48, 0, -38)].forEach((position, index) => {
+    [new Vector3(5, 0, -2), new Vector3(12, 0, 8), new Vector3(-42, 0, 34), new Vector3(-105, 0, -62), new Vector3(118, 0, -84)].forEach((position, index) => {
       const entityId = `monster-green-slime-${index + 1}`;
       position.y = this.terrainHeightAt(position.x, position.z);
       const root = new TransformNode(entityId, this.scene); root.position = position;
@@ -428,30 +430,33 @@ export class PawMeadowScene {
   }
 
   private isMonsterRoamWalkable(point: Vector3): boolean {
-    if (point.x < -76 || point.x > 76 || point.z < -64 || point.z > 64) return false;
+    if (point.x < -246 || point.x > 246 || point.z < -246 || point.z > 246) return false;
     if (!this.isPlayerWalkable(point.x, point.z)) return false;
-    const giantTree = new Vector3(45, 0, 48);
+    const giantTree = new Vector3(145, 0, 168);
     if (Vector3.DistanceSquared(point, giantTree) < 20.25) return false;
-    const trees = [new Vector3(-45, 0, -34), new Vector3(-58, 0, 18), new Vector3(60, 0, -38), new Vector3(54, 0, 34), new Vector3(-38, 0, 44), new Vector3(4, 0, -48), new Vector3(-66, 0, -10), new Vector3(68, 0, 12)];
+    const trees = [new Vector3(-45, 0, -34), new Vector3(-96, 0, 48), new Vector3(88, 0, -62), new Vector3(105, 0, 76), new Vector3(-72, 0, 108), new Vector3(4, 0, -88), new Vector3(-164, 0, -42), new Vector3(178, 0, 32)];
     return !trees.some((tree) => Vector3.DistanceSquared(point, tree) < 4);
   }
 
   private isPlayerWalkable(x: number, z: number): boolean {
-    if (x < -76 || x > 76 || z < -64 || z > 64) return false;
+    if (x < -246 || x > 246 || z < -246 || z > 246) return false;
     return !rockBarriers.some((rock) => Math.hypot(x - rock.x, z - rock.z) < 2.35);
   }
 
   private terrainHeightAt(x: number, z: number): number {
     const terrace = (centerX: number, centerZ: number, radiusX: number, radiusZ: number, height: number) => {
       const distance = Math.hypot((x - centerX) / radiusX, (z - centerZ) / radiusZ);
-      const amount = Scalar.Clamp((1 - distance) * 4, 0, 1);
+      const amount = Scalar.Clamp((1 - distance) * 8, 0, 1);
       return height * amount * amount * (3 - 2 * amount);
     };
-    return terrace(-42, 24, 34, 30, 1.35)
-      + terrace(-42, 24, 22, 18, 1.1)
-      + terrace(43, -28, 30, 24, 1.1)
-      + terrace(43, -28, 18, 14, 0.8)
-      + terrace(42, 43, 28, 22, 0.9);
+    return terrace(-15, -2, 20, 18, 3.2)
+      + terrace(-46, 38, 86, 72, 4.2)
+      + terrace(-46, 38, 48, 38, 3.8)
+      + terrace(104, -82, 92, 76, 5.2)
+      + terrace(104, -82, 52, 42, 3.6)
+      + terrace(128, 142, 86, 70, 6.5)
+      + terrace(-158, -132, 78, 64, 4.8)
+      + terrace(-176, 152, 64, 58, 7.5);
   }
 
   private idle(target: TransformNode, distance: number, speed: number): void {
