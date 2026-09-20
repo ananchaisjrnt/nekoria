@@ -29,7 +29,7 @@ export function App() {
 
       <section className="brand-card">
         <span className="brand-mark">●</span>
-        <div><small>NEKORIA</small><h1>Paw Meadow</h1><span>Movement v0.2</span></div>
+        <div><small>NEKORIA</small><h1>Paw Meadow</h1><span>Visual Benchmark v0.5</span></div>
       </section>
 
       <section className="map-card">
@@ -48,7 +48,7 @@ export function App() {
       </nav>
 
       <button className="auto-button" type="button" disabled>AUTO</button>
-      <div className="prototype-badge">TAP A SLIME TO LOCK TARGET</div>
+      <div className="prototype-badge">EXPLORE · LOCK · BATTLE</div>
     </main>
   );
 }

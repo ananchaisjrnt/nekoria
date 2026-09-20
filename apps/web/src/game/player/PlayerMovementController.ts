@@ -42,6 +42,10 @@ export class PlayerMovementController {
     return Math.hypot(joystick.x, joystick.forward) > JOYSTICK_DEAD_ZONE;
   }
 
+  isMoving(): boolean {
+    return this.velocity.lengthSquared() > 0.04;
+  }
+
   private setDestination(point: Vector3, emitIntent: boolean): void {
     this.destination = new Vector3(
       Scalar.Clamp(point.x, -246, 246),

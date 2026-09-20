@@ -18,7 +18,6 @@ export class BasicAttackController {
     this.targetId = null;
     this.state = "idle";
     this.strikeElapsed = 0;
-    this.player.rotation.z = 0;
   }
 
   update(deltaSeconds: number): void {
@@ -41,7 +40,6 @@ export class BasicAttackController {
       if (this.targetId) this.onStrike(this.targetId);
     }
     this.strikeElapsed += deltaSeconds;
-    this.player.rotation.z = this.strikeElapsed <= 0.32 ? Math.sin((this.strikeElapsed / 0.32) * Math.PI) * -0.22 : 0;
     if (this.strikeElapsed >= 1) { this.state = "approaching"; this.strikeElapsed = 0; }
   }
 }

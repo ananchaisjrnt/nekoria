@@ -25,6 +25,8 @@ import { GameConnection } from "./network/GameConnection";
 import { BasicAttackController } from "./player/BasicAttackController";
 import { PlayerMovementController } from "./player/PlayerMovementController";
 import type { TargetSummary } from "./targeting/TargetingTypes";
+import { AdventurerVisual } from "./visuals/AdventurerVisual";
+import { GreenSlimeVisual } from "./visuals/GreenSlimeVisual";
 
 const palette = {
   grass: "#78b85c", darkGrass: "#4f8a45", path: "#d7b678", water: "#61b8d2",
@@ -46,6 +48,7 @@ interface MonsterEntity {
   readonly entityId: string;
   readonly root: TransformNode;
   summary: TargetSummary;
+  readonly visual: GreenSlimeVisual;
 }
 
 export class PawMeadowScene {
@@ -53,6 +56,7 @@ export class PawMeadowScene {
   private readonly scene: Scene;
   private readonly camera: ArcRotateCamera;
   private readonly player: TransformNode;
+  private readonly playerVisual: AdventurerVisual;
   private readonly movement: PlayerMovementController;
   private readonly monsters = new Map<string, MonsterEntity>();
   private readonly monsterRoaming: MonsterRoamingController[] = [];
@@ -75,10 +79,18 @@ export class PawMeadowScene {
     this.engine = new Engine(canvas, true, { antialias: true, adaptToDeviceRatio: true });
     this.scene = new Scene(this.engine);
     this.scene.clearColor = new Color4(0.62, 0.84, 0.96, 1);
+    this.scene.fogMode = Scene.FOGMODE_LINEAR;
+    this.scene.fogStart = 78;
+    this.scene.fogEnd = 235;
+    this.scene.fogColor = new Color3(0.67, 0.84, 0.9);
+    this.scene.imageProcessingConfiguration.exposure = 1.08;
+    this.scene.imageProcessingConfiguration.contrast = 1.06;
     this.camera = this.createCamera();
     const shadows = this.createLights();
     this.createMeadow();
-    this.player = this.createAdventurer(shadows);
+    this.player = this.createAdventurer();
+    this.playerVisual = new AdventurerVisual(this.player, this.scene);
+    this.player.getChildMeshes().forEach((mesh) => shadows.addShadowCaster(mesh));
     this.movement = new PlayerMovementController(
       this.player,
       this.camera,
@@ -96,7 +108,10 @@ export class PawMeadowScene {
         const root = this.monsters.get(id)?.root;
         return root?.isEnabled() ? root : null;
       },
-      (id) => this.connection.attack(id),
+      (id) => {
+        this.playerVisual.triggerAttack();
+        this.connection.attack(id);
+      },
     );
     this.setupClickToMove();
     this.canvas.addEventListener("dblclick", this.handleDoubleClick);
@@ -108,9 +123,11 @@ export class PawMeadowScene {
     this.engine.runRenderLoop(() => {
       const deltaSeconds = Math.min(this.engine.getDeltaTime() / 1000, 0.05);
       this.monsterRoaming.forEach((controller) => controller.update(deltaSeconds));
+      this.monsters.forEach((monster) => monster.visual.update(deltaSeconds));
       this.updateProximityTarget(deltaSeconds);
       this.attack.update(deltaSeconds);
       this.movement.update(deltaSeconds);
+      this.playerVisual.update(deltaSeconds, this.movement.isMoving());
       this.scene.render();
     });
     window.addEventListener("resize", this.resize);
@@ -149,9 +166,14 @@ export class PawMeadowScene {
     const monster = this.monsters.get(result.targetEntityId);
     if (monster) {
       monster.summary = { ...monster.summary, currentHp: result.targetHp };
+      if (result.outcome !== "MISS") monster.visual.triggerHit();
       const roaming = this.roamingByEntity.get(result.targetEntityId);
       if (result.targetDead) roaming?.die();
-      else roaming?.engage(this.player.position);
+      else {
+        roaming?.engage(this.player.position);
+        monster.visual.triggerAttack();
+        this.playerVisual.triggerHit();
+      }
       if (result.targetDead) {
         if (this.activeTargetId === result.targetEntityId) this.clearTarget();
         this.playMonsterDeath(result.targetEntityId, monster.root);
@@ -303,24 +325,13 @@ export class PawMeadowScene {
     ground.material = this.mat("grass", palette.grass);
     ground.receiveShadows = true;
 
-    const path = MeshBuilder.CreateGround("main-path", { width: 10, height: 490 }, this.scene);
-    path.position = new Vector3(-4.5, 0.025, 0);
-    path.rotation.y = -0.18;
-    path.material = this.mat("path", palette.path);
-    path.isPickable = false;
-
-    const stream = MeshBuilder.CreateGround("stream", { width: 6, height: 490 }, this.scene);
-    stream.position = new Vector3(13, 0.12, 0);
-    stream.rotation.y = 0.12;
-    stream.material = this.mat("water", palette.water, 0.8);
-    stream.isPickable = false;
-
     this.giantTree(new Vector3(145, 0, 168));
     rockBarriers.forEach((position, index) => this.rock(`ridge-rock-${index}`, position, 1.8 + (index % 3) * 0.35));
 
     [new Vector3(-45, 0, -34), new Vector3(-96, 0, 48), new Vector3(88, 0, -62), new Vector3(105, 0, 76), new Vector3(-72, 0, 108), new Vector3(4, 0, -88), new Vector3(-164, 0, -42), new Vector3(178, 0, 32), new Vector3(-205, 0, 154), new Vector3(194, 0, -168), new Vector3(-132, 0, -176), new Vector3(64, 0, 194)].forEach((p, i) => this.tree(`tree-${i}`, p));
+    this.createBenchmarkDressing();
 
-    for (let i = 0; i < 420; i += 1) {
+    for (let i = 0; i < 180; i += 1) {
       const x = ((i * 137) % 480) - 240;
       const z = ((i * 193) % 480) - 240;
       if (Math.abs(x + 4.5) < 5 || Math.abs(x - 13) < 3) continue;
@@ -330,11 +341,99 @@ export class PawMeadowScene {
     }
   }
 
-  private hill(position: Vector3, scale: Vector3): void {
-    const hill = MeshBuilder.CreateSphere("rolling-hill", { diameter: 2, segments: 14 }, this.scene);
-    hill.position = position;
-    hill.scaling = scale;
-    hill.material = this.mat("dark-grass", palette.darkGrass);
+  private createBenchmarkDressing(): void {
+    const pathMaterial = this.mat("benchmark-path", "#d9b979");
+    for (let step = -11; step <= 11; step += 1) {
+      const z = step * 3.7;
+      const x = -5 + Math.sin(step * 0.38) * 5.4;
+      const nextX = -5 + Math.sin((step + 1) * 0.38) * 5.4;
+      const path = MeshBuilder.CreateDisc(`benchmark-path-${step}`, { radius: 3.15, tessellation: 14 }, this.scene);
+      path.position = new Vector3(x, this.terrainHeightAt(x, z) + 0.055, z);
+      path.rotation.x = Math.PI / 2;
+      path.rotation.z = Math.atan2(nextX - x, 3.7);
+      path.scaling.x = 1.25;
+      path.material = pathMaterial;
+      path.isPickable = false;
+    }
+
+    const waterMaterial = this.mat("benchmark-water", "#62bdd0", 0.86);
+    waterMaterial.emissiveColor = Color3.FromHexString("#397d91").scale(0.18);
+    for (let step = -9; step <= 9; step += 1) {
+      const z = step * 3.9;
+      const x = 24 + Math.sin(step * 0.5) * 2.2;
+      const water = MeshBuilder.CreateDisc(`benchmark-stream-${step}`, { radius: 2.5, tessellation: 16 }, this.scene);
+      water.position = new Vector3(x, this.terrainHeightAt(x, z) + 0.09, z);
+      water.rotation.x = Math.PI / 2;
+      water.scaling.x = 1.25;
+      water.material = waterMaterial;
+      water.isPickable = false;
+    }
+
+    for (let plank = -4; plank <= 4; plank += 1) {
+      const x = 24 + plank * 0.72;
+      const z = 8;
+      const bridge = MeshBuilder.CreateBox(`bridge-plank-${plank}`, { width: 0.62, height: 0.18, depth: 3.7 }, this.scene);
+      bridge.position = new Vector3(x, this.terrainHeightAt(24, z) + 0.42, z);
+      bridge.material = this.mat("bridge-wood", "#8b5e37");
+      bridge.isPickable = false;
+    }
+
+    const treeClusters = [new Vector3(-30, 0, -24), new Vector3(-35, 0, 18), new Vector3(34, 0, 30), new Vector3(38, 0, -28)];
+    treeClusters.forEach((center, cluster) => {
+      for (let index = 0; index < 3; index += 1) {
+        this.tree(`benchmark-tree-${cluster}-${index}`, new Vector3(center.x + index * 3.4, 0, center.z + (index % 2) * 3.1));
+      }
+    });
+
+    const bushes = [new Vector3(-16, 0, -19), new Vector3(-21, 0, 16), new Vector3(14, 0, 27), new Vector3(33, 0, -12), new Vector3(-31, 0, 4), new Vector3(10, 0, -31)];
+    bushes.forEach((position, index) => this.bush(`benchmark-bush-${index}`, position));
+
+    for (let index = 0; index < 72; index += 1) {
+      const angle = index * 2.399;
+      const radius = 9 + (index % 9) * 3.5;
+      const x = Math.cos(angle) * radius - 2;
+      const z = Math.sin(angle) * radius;
+      if (Math.abs(x + 5) < 5 || Math.abs(x - 24) < 4) continue;
+      const tuft = MeshBuilder.CreateCylinder(`grass-tuft-${index}`, { height: 0.5 + (index % 3) * 0.12, diameterTop: 0, diameterBottom: 0.24, tessellation: 3 }, this.scene);
+      tuft.position = new Vector3(x, this.terrainHeightAt(x, z) + 0.25, z);
+      tuft.rotation.y = angle;
+      tuft.material = this.mat(`grass-tuft-material-${index % 2}`, index % 2 ? "#4e914a" : "#66a954");
+      tuft.isPickable = false;
+    }
+
+    this.createFence(new Vector3(-25, 0, 30), 7, 2.8, 0.1);
+    this.createFence(new Vector3(30, 0, -22), 6, 2.8, -0.35);
+  }
+
+  private bush(name: string, position: Vector3): void {
+    const y = this.terrainHeightAt(position.x, position.z);
+    for (let part = 0; part < 3; part += 1) {
+      const leaf = MeshBuilder.CreateSphere(`${name}-${part}`, { diameter: 1.25, segments: 8 }, this.scene);
+      leaf.position = new Vector3(position.x + (part - 1) * 0.48, y + 0.55 + (part % 2) * 0.18, position.z + (part % 2) * 0.25);
+      leaf.scaling.y = 0.75;
+      leaf.material = this.mat(`bush-material-${part % 2}`, part % 2 ? "#3f844b" : "#58a052");
+      leaf.isPickable = false;
+    }
+  }
+
+  private createFence(start: Vector3, count: number, spacing: number, angle: number): void {
+    const wood = this.mat("fence-wood", "#7c5534");
+    const direction = new Vector3(Math.cos(angle), 0, Math.sin(angle));
+    for (let index = 0; index < count; index += 1) {
+      const x = start.x + direction.x * index * spacing;
+      const z = start.z + direction.z * index * spacing;
+      const y = this.terrainHeightAt(x, z);
+      const post = MeshBuilder.CreateCylinder(`fence-post-${start.x}-${index}`, { height: 1.55, diameterTop: 0.22, diameterBottom: 0.3, tessellation: 6 }, this.scene);
+      post.position = new Vector3(x, y + 0.78, z);
+      post.material = wood;
+      post.isPickable = false;
+      if (index === count - 1) continue;
+      const rail = MeshBuilder.CreateBox(`fence-rail-${start.x}-${index}`, { width: spacing, height: 0.16, depth: 0.16 }, this.scene);
+      rail.position = new Vector3(x + direction.x * spacing * 0.5, y + 0.88, z + direction.z * spacing * 0.5);
+      rail.rotation.y = -angle;
+      rail.material = wood;
+      rail.isPickable = false;
+    }
   }
 
   private rock(name: string, position: Vector3, size: number): void {
@@ -351,47 +450,38 @@ export class PawMeadowScene {
     const trunk = MeshBuilder.CreateCylinder(`${name}-trunk`, { height: 3.4, diameterTop: 0.5, diameterBottom: 0.8 }, this.scene);
     trunk.position = position.add(new Vector3(0, 1.7, 0));
     trunk.material = this.mat("bark", palette.bark);
-    const crown = MeshBuilder.CreateSphere(`${name}-crown`, { diameter: 3.8, segments: 10 }, this.scene);
-    crown.position = position.add(new Vector3(0, 4.1, 0));
-    crown.scaling = new Vector3(1.15, 0.8, 1);
-    crown.material = this.mat("leaves", palette.leaves);
+    for (let cluster = 0; cluster < 4; cluster += 1) {
+      const angle = cluster * Math.PI * 0.5 + position.x * 0.03;
+      const crown = MeshBuilder.CreateSphere(`${name}-crown-${cluster}`, { diameter: cluster === 0 ? 3.7 : 2.6, segments: 10 }, this.scene);
+      crown.position = position.add(new Vector3(Math.cos(angle) * (cluster ? 1.15 : 0), 3.9 + (cluster % 2) * 0.65, Math.sin(angle) * (cluster ? 0.9 : 0)));
+      crown.scaling = new Vector3(1.12, 0.82, 1);
+      crown.material = this.mat(`leaves-${cluster % 2}`, cluster % 2 ? "#61a956" : palette.leaves);
+      crown.isPickable = false;
+    }
+    trunk.isPickable = false;
   }
 
   private giantTree(position: Vector3): void {
     position.y = this.terrainHeightAt(position.x, position.z);
-    const trunk = MeshBuilder.CreateCylinder("giant-tree-trunk", { height: 9, diameterTop: 2.1, diameterBottom: 4 }, this.scene);
-    trunk.position = position.add(new Vector3(0, 4.5, 0));
+    const trunk = MeshBuilder.CreateCylinder("giant-tree-trunk", { height: 22, diameterTop: 4.2, diameterBottom: 8.5, tessellation: 12 }, this.scene);
+    trunk.position = position.add(new Vector3(0, 11, 0));
     trunk.material = this.mat("giant-bark", palette.bark);
-    const crown = MeshBuilder.CreateSphere("giant-tree-crown", { diameter: 12, segments: 18 }, this.scene);
-    crown.position = position.add(new Vector3(0, 10.2, 0));
-    crown.scaling = new Vector3(1.35, 0.7, 1.1);
-    crown.material = this.mat("giant-leaves", "#4b9d58");
+    for (let cluster = 0; cluster < 7; cluster += 1) {
+      const angle = cluster * 2.399;
+      const crown = MeshBuilder.CreateSphere(`giant-tree-crown-${cluster}`, { diameter: cluster === 0 ? 24 : 17, segments: 14 }, this.scene);
+      crown.position = position.add(new Vector3(Math.cos(angle) * (cluster ? 8 : 0), 23 + (cluster % 3) * 3.2, Math.sin(angle) * (cluster ? 6 : 0)));
+      crown.scaling.y = 0.68;
+      crown.material = this.mat(`giant-leaves-${cluster % 2}`, cluster % 2 ? "#62ad5d" : "#438e52");
+      crown.isPickable = false;
+    }
+    trunk.isPickable = false;
   }
 
-  private createAdventurer(shadows: ShadowGenerator): TransformNode {
+  private createAdventurer(): TransformNode {
     const root = new TransformNode("adventurer", this.scene);
     root.position = new Vector3(-1.5, 0, -1);
     root.rotation.y = -0.35;
-
-    const body = MeshBuilder.CreateCapsule("adventurer-body", { height: 2.15, radius: 0.58 }, this.scene);
-    body.parent = root; body.position.y = 1.65; body.material = this.mat("leather", palette.leather);
-    const head = MeshBuilder.CreateSphere("adventurer-head", { diameter: 1.42, segments: 18 }, this.scene);
-    head.parent = root; head.position.y = 3.12; head.material = this.mat("fur", palette.fur);
-    const muzzle = MeshBuilder.CreateSphere("muzzle", { diameter: 0.62, segments: 12 }, this.scene);
-    muzzle.parent = root; muzzle.position = new Vector3(0, 3, -0.6); muzzle.scaling = new Vector3(1.1, 0.65, 0.55); muzzle.material = this.mat("cream", palette.cream);
-    this.ear(root, -0.42); this.ear(root, 0.42);
-    const scarf = MeshBuilder.CreateTorus("scarf", { diameter: 1.18, thickness: 0.18, tessellation: 24 }, this.scene);
-    scarf.parent = root; scarf.position.y = 2.55; scarf.rotation.x = Math.PI / 2; scarf.material = this.mat("scarf-mat", palette.scarf);
-    const tail = MeshBuilder.CreateTorus("tail", { diameter: 1.3, thickness: 0.19, tessellation: 24 }, this.scene);
-    tail.parent = root; tail.position = new Vector3(0.55, 1.35, 0.42); tail.scaling.y = 1.25; tail.rotation = new Vector3(0.2, 1.15, -0.4); tail.material = this.mat("tail-mat", palette.fur);
-    root.getChildMeshes().forEach((mesh) => shadows.addShadowCaster(mesh));
-    this.idle(root, 0.035, 2.2);
     return root;
-  }
-
-  private ear(root: TransformNode, x: number): void {
-    const ear = MeshBuilder.CreateCylinder(`ear-${x}`, { height: 0.8, diameterTop: 0, diameterBottom: 0.62, tessellation: 3 }, this.scene);
-    ear.parent = root; ear.position = new Vector3(x, 3.8, 0); ear.rotation.z = x < 0 ? -0.13 : 0.13; ear.material = this.mat("ear-mat", palette.fur);
   }
 
   private createSlimes(shadows: ShadowGenerator): void {
@@ -406,7 +496,9 @@ export class PawMeadowScene {
         currentHp: GREEN_SLIME.maxHp,
         maxHp: GREEN_SLIME.maxHp,
       };
-      this.monsters.set(entityId, { entityId, root, summary });
+      const visual = new GreenSlimeVisual(root, this.scene, index);
+      root.getChildMeshes().forEach((mesh) => shadows.addShadowCaster(mesh));
+      this.monsters.set(entityId, { entityId, root, summary, visual });
       const roaming = new MonsterRoamingController(root, {
         roamRadius: 3.4 + index * 0.45,
         moveSpeed: 0.85 + index * 0.12,
@@ -418,14 +510,6 @@ export class PawMeadowScene {
       }, 1089 + index * 7919);
       this.monsterRoaming.push(roaming);
       this.roamingByEntity.set(entityId, roaming);
-      const slime = MeshBuilder.CreateSphere(`slime-body-${index}`, { diameter: 1.35, segments: 18 }, this.scene);
-      slime.parent = root; slime.position.y = 0.65; slime.scaling = new Vector3(1, 0.82, 1); slime.material = this.mat("slime", palette.slime, 0.9); shadows.addShadowCaster(slime);
-      slime.metadata = { targetEntityId: entityId };
-      for (const x of [-0.24, 0.24]) {
-        const eye = MeshBuilder.CreateSphere(`slime-eye-${index}-${x}`, { diameter: 0.12, segments: 8 }, this.scene);
-        eye.parent = root; eye.position = new Vector3(x, 0.77, -0.61); eye.material = this.mat("slime-eye", "#26352d"); eye.metadata = { targetEntityId: entityId };
-      }
-      this.idle(root, 0.09, 1.3 + index * 0.12);
     });
   }
 
@@ -461,13 +545,6 @@ export class PawMeadowScene {
 
   private horizontalDistance(a: Vector3, b: Vector3): number {
     return Math.hypot(a.x - b.x, a.z - b.z);
-  }
-
-  private idle(target: TransformNode, distance: number, speed: number): void {
-    const animation = new Animation(`${target.name}-idle`, "scaling.y", 30, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
-    animation.setKeys([{ frame: 0, value: 1 }, { frame: 30, value: 1 + distance }, { frame: 60, value: 1 }]);
-    target.animations = [animation];
-    this.scene.beginAnimation(target, 0, 60, true, speed);
   }
 
   private mat(name: string, hex: string, alpha = 1): StandardMaterial {
