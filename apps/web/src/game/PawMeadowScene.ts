@@ -18,6 +18,7 @@ import { GREEN_SLIME } from "@nekoria/game-core";
 import type { TargetIntentPayload } from "@nekoria/protocol";
 import type { MovementInput } from "./input/MovementInput";
 import { MonsterRoamingController } from "./monsters/MonsterRoamingController";
+import { BasicAttackController } from "./player/BasicAttackController";
 import { PlayerMovementController } from "./player/PlayerMovementController";
 import type { TargetSummary } from "./targeting/TargetingTypes";
 
@@ -41,6 +42,10 @@ export class PawMeadowScene {
   private readonly movement: PlayerMovementController;
   private readonly monsters = new Map<string, MonsterEntity>();
   private readonly monsterRoaming: MonsterRoamingController[] = [];
+  private readonly attack: BasicAttackController;
+  private activeTargetId: string | null = null;
+  private targetSource: "manual" | "proximity" | null = null;
+  private proximityCheckElapsed = 0;
   private pointerDown: { x: number; y: number } | null = null;
   private readonly targetRing: ReturnType<typeof MeshBuilder.CreateTorus>;
   private targetSequence = 0;
@@ -60,15 +65,19 @@ export class PawMeadowScene {
     this.movement = new PlayerMovementController(this.player, this.camera, input);
     this.createSlimes(shadows);
     this.targetRing = this.createTargetRing();
+    this.attack = new BasicAttackController(this.player, this.movement, (id) => this.monsters.get(id)?.root ?? null);
     this.setupClickToMove();
+    this.canvas.addEventListener("dblclick", this.handleDoubleClick);
     window.addEventListener("keydown", this.handleKeyDown);
   }
 
   start(): void {
     this.engine.runRenderLoop(() => {
       const deltaSeconds = Math.min(this.engine.getDeltaTime() / 1000, 0.05);
-      this.movement.update(deltaSeconds);
       this.monsterRoaming.forEach((controller) => controller.update(deltaSeconds));
+      this.updateProximityTarget(deltaSeconds);
+      this.attack.update(deltaSeconds);
+      this.movement.update(deltaSeconds);
       this.scene.render();
     });
     window.addEventListener("resize", this.resize);
@@ -77,6 +86,7 @@ export class PawMeadowScene {
   dispose(): void {
     window.removeEventListener("resize", this.resize);
     window.removeEventListener("keydown", this.handleKeyDown);
+    this.canvas.removeEventListener("dblclick", this.handleDoubleClick);
     this.engine.stopRenderLoop();
     this.scene.dispose();
     this.engine.dispose();
@@ -91,11 +101,22 @@ export class PawMeadowScene {
     if (!this.targetRing.isEnabled()) return;
     this.targetRing.setEnabled(false);
     this.targetRing.parent = null;
+    this.activeTargetId = null;
+    this.targetSource = null;
+    this.attack.cancel();
     this.targetSequence += 1;
     const intent: TargetIntentPayload = { targetEntityId: null, sequence: this.targetSequence };
     void intent;
     this.onTargetChange(null);
   }
+
+  requestAttack(): void { this.attack.request(this.activeTargetId); }
+
+  private readonly handleDoubleClick = (): void => {
+    const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => typeof mesh.metadata?.targetEntityId === "string");
+    const entityId = pick?.pickedMesh?.metadata?.targetEntityId;
+    if (typeof entityId === "string") { this.selectTarget(entityId, "manual"); this.requestAttack(); }
+  };
 
   private createCamera(): ArcRotateCamera {
     const camera = new ArcRotateCamera("mmorpg-camera", -Math.PI / 3.7, Math.PI / 3.15, 25, new Vector3(0, 2.2, 1), this.scene);
@@ -126,7 +147,7 @@ export class PawMeadowScene {
       );
       const targetEntityId = pick?.pickedMesh?.metadata?.targetEntityId;
       if (typeof targetEntityId === "string") {
-        this.selectTarget(targetEntityId);
+        this.selectTarget(targetEntityId, "manual");
       } else if (pick?.hit && pick.pickedPoint) {
         this.clearTarget();
         this.movement.moveTo(pick.pickedPoint);
@@ -134,16 +155,36 @@ export class PawMeadowScene {
     });
   }
 
-  private selectTarget(entityId: string): void {
+  private selectTarget(entityId: string, source: "manual" | "proximity"): void {
     const target = this.monsters.get(entityId);
     if (!target) return;
     this.targetRing.parent = target.root;
     this.targetRing.position.set(0, 0.08, 0);
     this.targetRing.setEnabled(true);
+    this.activeTargetId = entityId;
+    this.targetSource = source;
+    this.attack.cancel();
     this.targetSequence += 1;
     const intent: TargetIntentPayload = { targetEntityId: target.entityId, sequence: this.targetSequence };
     void intent;
     this.onTargetChange(target.summary);
+  }
+
+  private updateProximityTarget(deltaSeconds: number): void {
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    this.proximityCheckElapsed += deltaSeconds;
+    if (this.proximityCheckElapsed < 0.18) return;
+    this.proximityCheckElapsed = 0;
+    const active = this.activeTargetId ? this.monsters.get(this.activeTargetId) : null;
+    if (active && this.targetSource === "proximity" && Vector3.Distance(active.root.position, this.player.position) > 8) this.clearTarget();
+    if (this.activeTargetId) return;
+    let nearest: MonsterEntity | undefined;
+    let nearestDistance = 5;
+    for (const monster of this.monsters.values()) {
+      const distance = Vector3.Distance(monster.root.position, this.player.position);
+      if (distance < nearestDistance) { nearest = monster; nearestDistance = distance; }
+    }
+    if (nearest) this.selectTarget(nearest.entityId, "proximity");
   }
 
   private createTargetRing() {

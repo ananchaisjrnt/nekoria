@@ -10,3 +10,8 @@ export interface TargetIntentPayload {
   readonly targetEntityId: string | null;
   readonly sequence: number;
 }
+
+export interface AttackIntentPayload {
+  readonly targetEntityId: string;
+  readonly sequence: number;
+}

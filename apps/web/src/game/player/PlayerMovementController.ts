@@ -21,16 +21,33 @@ export class PlayerMovementController {
   ) {}
 
   moveTo(point: Vector3): void {
+    this.setDestination(point, true);
+  }
+
+  approachTo(point: Vector3): void {
+    this.setDestination(point, false);
+  }
+
+  stop(): void {
+    this.destination = null;
+    this.velocity.setAll(0);
+  }
+
+  hasDirectionalInput(): boolean {
+    const joystick = this.input.getJoystick();
+    return Math.hypot(joystick.x, joystick.forward) > JOYSTICK_DEAD_ZONE;
+  }
+
+  private setDestination(point: Vector3, emitIntent: boolean): void {
     this.destination = new Vector3(
       Scalar.Clamp(point.x, -25, 25),
       0,
       Scalar.Clamp(point.z, -21, 21),
     );
-    this.moveSequence += 1;
-    this.onMoveIntent({
-      destination: { x: this.destination.x, z: this.destination.z },
-      sequence: this.moveSequence,
-    });
+    if (emitIntent) {
+      this.moveSequence += 1;
+      this.onMoveIntent({ destination: { x: this.destination.x, z: this.destination.z }, sequence: this.moveSequence });
+    }
   }
 
   update(deltaSeconds: number): void {

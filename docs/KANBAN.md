@@ -20,13 +20,7 @@ Acceptance owner: User
 
 ## Ready
 
-### NK-005 — Basic Attack and Auto Approach
-
-- SR: `docs/SR_005_BASIC_ATTACK.md`
-- Owner: Terra
-- Status: Ready for implementation
-- Scope: ATK command, desktop double-click, auto approach, placeholder strike, mobile proximity lock
-- Excludes: HIT, MISS, CRIT, damage, HP changes, death, EXP, loot, Auto Battle
+No card ready for implementation.
 
 ## In Progress
 
@@ -34,7 +28,13 @@ No active card.
 
 ## User Testing
 
-No card awaiting user testing.
+### NK-005 — Basic Attack and Auto Approach
+
+- SR: `docs/SR_005_BASIC_ATTACK.md`
+- Owner: User
+- Status: Awaiting deployed-build acceptance
+- Scope: ATK command, desktop double-click, auto approach, placeholder strike, mobile proximity lock
+- Excludes: HIT, MISS, CRIT, damage, HP changes, death, EXP, loot, Auto Battle
 
 ## Done
 

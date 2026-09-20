@@ -6,10 +6,11 @@ import type { TargetSummary } from "./targeting/TargetingTypes";
 interface GameCanvasProps {
   input: MovementInput;
   clearTargetRequest: number;
+  attackRequest: number;
   onTargetChange: (target: TargetSummary | null) => void;
 }
 
-export function GameCanvas({ input, clearTargetRequest, onTargetChange }: GameCanvasProps) {
+export function GameCanvas({ input, clearTargetRequest, attackRequest, onTargetChange }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<PawMeadowScene | null>(null);
 
@@ -24,6 +25,10 @@ export function GameCanvas({ input, clearTargetRequest, onTargetChange }: GameCa
   useEffect(() => {
     if (clearTargetRequest > 0) gameRef.current?.clearTarget();
   }, [clearTargetRequest]);
+
+  useEffect(() => {
+    if (attackRequest > 0) gameRef.current?.requestAttack();
+  }, [attackRequest]);
 
   return <canvas ref={canvasRef} className="game-canvas" aria-label="Paw Meadow 3D scene" />;
 }
