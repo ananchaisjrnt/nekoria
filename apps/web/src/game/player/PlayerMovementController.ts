@@ -44,7 +44,7 @@ export class PlayerMovementController {
       const cameraForward = this.camera.target.subtract(this.camera.position);
       cameraForward.y = 0;
       cameraForward.normalize();
-      const cameraRight = new Vector3(-cameraForward.z, 0, cameraForward.x);
+      const cameraRight = new Vector3(cameraForward.z, 0, -cameraForward.x);
       desiredDirection = cameraRight.scale(joystick.x).add(cameraForward.scale(joystick.forward));
       desiredDirection.normalize();
       desiredSpeed = MAX_SPEED * Math.min(joystickStrength, 1);
