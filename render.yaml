@@ -2,7 +2,7 @@ services:
   - type: web
     name: nekoria-web
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @nekoria/web build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nekoria/web build
     staticPublishPath: ./apps/web/dist
     autoDeployTrigger: commit
     routes:
@@ -15,7 +15,7 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @nekoria/server build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nekoria/server build
     startCommand: pnpm --filter @nekoria/server start
     healthCheckPath: /health
     autoDeployTrigger: commit
