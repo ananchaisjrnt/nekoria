@@ -17,8 +17,12 @@ export class PlayerMovementController {
     private readonly player: TransformNode,
     private readonly camera: ArcRotateCamera,
     private readonly input: MovementInput,
+    private readonly terrainHeightAt: (x: number, z: number) => number,
+    private readonly isWalkable: (x: number, z: number) => boolean,
     private readonly onMoveIntent: (intent: MoveIntentPayload) => void = () => undefined,
-  ) {}
+  ) {
+    this.player.position.y = this.terrainHeightAt(this.player.position.x, this.player.position.z);
+  }
 
   moveTo(point: Vector3): void {
     this.setDestination(point, true);
@@ -40,9 +44,9 @@ export class PlayerMovementController {
 
   private setDestination(point: Vector3, emitIntent: boolean): void {
     this.destination = new Vector3(
-      Scalar.Clamp(point.x, -50, 50),
-      0,
-      Scalar.Clamp(point.z, -42, 42),
+      Scalar.Clamp(point.x, -76, 76),
+      this.terrainHeightAt(point.x, point.z),
+      Scalar.Clamp(point.z, -64, 64),
     );
     if (emitIntent) {
       this.moveSequence += 1;
@@ -82,9 +86,21 @@ export class PlayerMovementController {
     this.velocity = Vector3.Lerp(this.velocity, desiredVelocity, Math.min(1, rate * deltaSeconds));
 
     if (this.velocity.lengthSquared() < 0.0025) this.velocity.setAll(0);
-    this.player.position.addInPlace(this.velocity.scale(deltaSeconds));
-    this.player.position.x = Scalar.Clamp(this.player.position.x, -50, 50);
-    this.player.position.z = Scalar.Clamp(this.player.position.z, -42, 42);
+    const previous = this.player.position.clone();
+    const next = this.player.position.add(this.velocity.scale(deltaSeconds));
+    next.x = Scalar.Clamp(next.x, -76, 76);
+    next.z = Scalar.Clamp(next.z, -64, 64);
+    if (this.isWalkable(next.x, next.z)) {
+      this.player.position.copyFrom(next);
+    } else {
+      const slideX = new Vector3(next.x, previous.y, previous.z);
+      const slideZ = new Vector3(previous.x, previous.y, next.z);
+      if (this.isWalkable(slideX.x, slideX.z)) this.player.position.copyFrom(slideX);
+      else if (this.isWalkable(slideZ.x, slideZ.z)) this.player.position.copyFrom(slideZ);
+      else this.velocity.setAll(0);
+    }
+    const terrainY = this.terrainHeightAt(this.player.position.x, this.player.position.z);
+    this.player.position.y = Scalar.Lerp(this.player.position.y, terrainY, Math.min(1, 10 * deltaSeconds));
 
     if (this.velocity.lengthSquared() > 0.04) {
       const targetAngle = Math.atan2(-this.velocity.x, -this.velocity.z);

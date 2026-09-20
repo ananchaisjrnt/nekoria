@@ -7,6 +7,7 @@ export interface MonsterRoamingConfig {
   readonly idleMaxSeconds: number;
   readonly arrivalDistance: number;
   readonly isWalkable: (point: Vector3) => boolean;
+  readonly terrainHeightAt: (x: number, z: number) => number;
 }
 
 type RoamState = "idle" | "moving";
@@ -61,6 +62,7 @@ export class MonsterRoamingController {
 
     const direction = toDestination.scale(1 / distance);
     this.root.position.addInPlace(direction.scale(Math.min(this.config.moveSpeed * deltaSeconds, distance)));
+    this.root.position.y = this.config.terrainHeightAt(this.root.position.x, this.root.position.z);
     const targetAngle = Math.atan2(-direction.x, -direction.z);
     this.root.rotation.y = this.lerpAngle(this.root.rotation.y, targetAngle, Math.min(1, 7 * deltaSeconds));
     this.setSquash(1.06, 0.92, deltaSeconds);

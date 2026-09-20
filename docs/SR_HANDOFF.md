@@ -4,7 +4,7 @@ Status: SR-005 accepted; combined SR-006/007/008 implemented and awaiting user t
 
 ## Current test build — SR-006/007/008
 
-- Paw Meadow is now 104×88, four times the original ground area.
+- Paw Meadow was first expanded to 104×88 and is now 160×136 with layered terrain.
 - Five Green Slimes are distributed across the expanded field.
 - Basic Attack uses the NestJS WebSocket combat pathway for timing, HIT, MISS, CRIT, damage, monster HP/death, retaliation damage, EXP, Level Up, and Status Points.
 - A monster stops roaming and faces the player after being attacked; it resumes roaming after combat inactivity.
@@ -15,6 +15,8 @@ Status: SR-005 accepted; combined SR-006/007/008 implemented and awaiting user t
 Known prototype limits: session state is in memory, movement/range authority is still client-side, dead monsters do not respawn, and the placeholder retaliation has no final attack animation.
 
 Production hotfix: Render injects the server's private hostname into the static-site build. The web client converts that hostname to its public `onrender.com` address before opening the WebSocket, so browser and mobile clients can receive authoritative combat results.
+
+Terrain follow-up: Paw Meadow is expanded again to 160×136. Broad low terraces create multiple playable height layers, and rock ridges form short barriers that require manual route choices. Player and monster elevation follows the terrain surface. Dead monsters are excluded from mobile proximity targeting so death animations cannot relock an invalid target.
 
 SR owner: Sol
 

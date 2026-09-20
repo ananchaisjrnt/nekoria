@@ -102,6 +102,9 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-007 | Dispose dead monster entities and remove their controllers after death animation | Sol / Terra | pending push |
+| 2026-09-20 | NK-006 | Expanded field to 160×136 with layered terrain and blocking rock ridges | Sol / Terra | pending push |
+| 2026-09-20 | NK-007 | Prevented mobile proximity targeting from relocking dead monsters | Sol / Terra | pending push |
 | 2026-09-20 | NK-007 | Added Green Slime death animation before despawn | Sol / Terra | pending push |
 | 2026-09-20 | NK-007 | Fixed stale target and attack animation after monster death | Sol / Terra | pending push |
 | 2026-09-20 | NK-007 | Fixed Render internal-host WebSocket URL used by browser clients | Sol / Terra | pending push |

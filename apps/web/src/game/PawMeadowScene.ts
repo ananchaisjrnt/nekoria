@@ -8,11 +8,13 @@ import {
   HemisphericLight,
   MeshBuilder,
   PointerEventTypes,
+  Scalar,
   Scene,
   ShadowGenerator,
   StandardMaterial,
   TransformNode,
   Vector3,
+  VertexBuffer,
 } from "@babylonjs/core";
 import { GREEN_SLIME } from "@nekoria/game-core";
 import type { TargetIntentPayload } from "@nekoria/protocol";
@@ -29,6 +31,14 @@ const palette = {
   bark: "#7b4d2b", leaves: "#4e9b59", fur: "#d9b18b", cream: "#f4e6cb",
   leather: "#76503a", scarf: "#a94736", slime: "#8bdd70",
 };
+
+const MAP_HALF_WIDTH = 80;
+const MAP_HALF_HEIGHT = 68;
+const rockBarriers = [
+  new Vector3(-22, 0, -8), new Vector3(-18, 0, -4), new Vector3(-14, 0, 0),
+  new Vector3(20, 0, 16), new Vector3(24, 0, 18), new Vector3(28, 0, 20),
+  new Vector3(48, 0, -24), new Vector3(52, 0, -20),
+];
 
 interface MonsterEntity {
   readonly entityId: string;
@@ -67,7 +77,13 @@ export class PawMeadowScene {
     const shadows = this.createLights();
     this.createMeadow();
     this.player = this.createAdventurer(shadows);
-    this.movement = new PlayerMovementController(this.player, this.camera, input);
+    this.movement = new PlayerMovementController(
+      this.player,
+      this.camera,
+      input,
+      (x, z) => this.terrainHeightAt(x, z),
+      (x, z) => this.isPlayerWalkable(x, z),
+    );
     this.createSlimes(shadows);
     this.targetRing = this.createTargetRing();
     this.connection = new GameConnection((result) => this.handleCombatResult(result));
@@ -114,7 +130,6 @@ export class PawMeadowScene {
   };
 
   clearTarget(): void {
-    if (!this.activeTargetId) return;
     this.targetRing.setEnabled(false);
     this.targetRing.parent = null;
     this.activeTargetId = null;
@@ -137,14 +152,14 @@ export class PawMeadowScene {
       else roaming?.engage(this.player.position);
       if (result.targetDead) {
         if (this.activeTargetId === result.targetEntityId) this.clearTarget();
-        this.playMonsterDeath(monster.root);
+        this.playMonsterDeath(result.targetEntityId, monster.root);
       }
       else if (this.activeTargetId === result.targetEntityId) this.onTargetChange(monster.summary);
     }
     this.onCombatResult(result);
   }
 
-  private playMonsterDeath(monster: TransformNode): void {
+  private playMonsterDeath(entityId: string, monster: TransformNode): void {
     this.scene.stopAnimation(monster);
     Animation.CreateAndStartAnimation(
       `${monster.name}-death`,
@@ -156,7 +171,16 @@ export class PawMeadowScene {
       new Vector3(1.35, 0.05, 1.35),
       Animation.ANIMATIONLOOPMODE_CONSTANT,
       undefined,
-      () => monster.setEnabled(false),
+      () => {
+        const roaming = this.roamingByEntity.get(entityId);
+        if (roaming) {
+          const index = this.monsterRoaming.indexOf(roaming);
+          if (index >= 0) this.monsterRoaming.splice(index, 1);
+        }
+        this.roamingByEntity.delete(entityId);
+        this.monsters.delete(entityId);
+        monster.dispose();
+      },
       this.scene,
     );
   }
@@ -206,7 +230,7 @@ export class PawMeadowScene {
 
   private selectTarget(entityId: string, source: "manual" | "proximity"): void {
     const target = this.monsters.get(entityId);
-    if (!target) return;
+    if (!target || !target.root.isEnabled() || target.summary.currentHp <= 0) return;
     this.targetRing.parent = target.root;
     this.targetRing.position.set(0, 0.08, 0);
     this.targetRing.setEnabled(true);
@@ -230,6 +254,7 @@ export class PawMeadowScene {
     let nearest: MonsterEntity | undefined;
     let nearestDistance = 5;
     for (const monster of this.monsters.values()) {
+      if (!monster.root.isEnabled() || monster.summary.currentHp <= 0) continue;
       const distance = Vector3.Distance(monster.root.position, this.player.position);
       if (distance < nearestDistance) { nearest = monster; nearestDistance = distance; }
     }
@@ -263,34 +288,42 @@ export class PawMeadowScene {
   }
 
   private createMeadow(): void {
-    const ground = MeshBuilder.CreateGround("paw-meadow", { width: 104, height: 88 }, this.scene);
+    const ground = MeshBuilder.CreateGround("paw-meadow", { width: MAP_HALF_WIDTH * 2, height: MAP_HALF_HEIGHT * 2, subdivisions: 96, updatable: true }, this.scene);
+    const positions = ground.getVerticesData(VertexBuffer.PositionKind);
+    if (positions) {
+      for (let index = 0; index < positions.length; index += 3) {
+        positions[index + 1] = this.terrainHeightAt(positions[index]!, positions[index + 2]!);
+      }
+      ground.updateVerticesData(VertexBuffer.PositionKind, positions);
+      ground.refreshBoundingInfo();
+      ground.createNormals(true);
+    }
     ground.material = this.mat("grass", palette.grass);
     ground.receiveShadows = true;
 
-    const path = MeshBuilder.CreateGround("main-path", { width: 8, height: 88 }, this.scene);
+    const path = MeshBuilder.CreateGround("main-path", { width: 8, height: 132 }, this.scene);
     path.position = new Vector3(-4.5, 0.025, 0);
     path.rotation.y = -0.18;
     path.material = this.mat("path", palette.path);
     path.isPickable = false;
 
-    const stream = MeshBuilder.CreateGround("stream", { width: 4.8, height: 92 }, this.scene);
-    stream.position = new Vector3(13, 0.04, 0);
+    const stream = MeshBuilder.CreateGround("stream", { width: 4.8, height: 136 }, this.scene);
+    stream.position = new Vector3(13, 0.12, 0);
     stream.rotation.y = 0.12;
     stream.material = this.mat("water", palette.water, 0.8);
     stream.isPickable = false;
 
-    this.hill(new Vector3(-35, 1.2, -24), new Vector3(18, 3.4, 14));
-    this.hill(new Vector3(38, 1, 20), new Vector3(20, 2.8, 14));
-    this.giantTree(new Vector3(22, 0, 32));
+    this.giantTree(new Vector3(45, 0, 48));
+    rockBarriers.forEach((position, index) => this.rock(`ridge-rock-${index}`, position, 1.8 + (index % 3) * 0.35));
 
-    [new Vector3(-17, 0, -8), new Vector3(-35, 0, 12), new Vector3(35, 0, -12), new Vector3(38, 0, 28), new Vector3(-30, 0, 30), new Vector3(8, 0, -30)].forEach((p, i) => this.tree(`tree-${i}`, p));
+    [new Vector3(-45, 0, -34), new Vector3(-58, 0, 18), new Vector3(60, 0, -38), new Vector3(54, 0, 34), new Vector3(-38, 0, 44), new Vector3(4, 0, -48), new Vector3(-66, 0, -10), new Vector3(68, 0, 12)].forEach((p, i) => this.tree(`tree-${i}`, p));
 
-    for (let i = 0; i < 100; i += 1) {
-      const x = ((i * 37) % 96) - 48;
-      const z = ((i * 53) % 82) - 41;
+    for (let i = 0; i < 170; i += 1) {
+      const x = ((i * 37) % 150) - 75;
+      const z = ((i * 53) % 126) - 63;
       if (Math.abs(x + 4.5) < 5 || Math.abs(x - 13) < 3) continue;
       const flower = MeshBuilder.CreateSphere(`flower-${i}`, { diameter: 0.18, segments: 6 }, this.scene);
-      flower.position = new Vector3(x, 0.16, z);
+      flower.position = new Vector3(x, this.terrainHeightAt(x, z) + 0.16, z);
       flower.material = this.mat(`flower-mat-${i % 3}`, ["#f8e68b", "#f7b6cf", "#f7f2e1"][i % 3]!);
     }
   }
@@ -302,7 +335,17 @@ export class PawMeadowScene {
     hill.material = this.mat("dark-grass", palette.darkGrass);
   }
 
+  private rock(name: string, position: Vector3, size: number): void {
+    const rock = MeshBuilder.CreateSphere(name, { diameter: 2, segments: 8 }, this.scene);
+    rock.position = new Vector3(position.x, this.terrainHeightAt(position.x, position.z) + size * 0.45, position.z);
+    rock.scaling = new Vector3(size, size * 0.65, size * 0.85);
+    rock.rotation.y = position.x * 0.17;
+    rock.material = this.mat("ridge-rock-mat", "#71806d");
+    rock.isPickable = false;
+  }
+
   private tree(name: string, position: Vector3): void {
+    position.y = this.terrainHeightAt(position.x, position.z);
     const trunk = MeshBuilder.CreateCylinder(`${name}-trunk`, { height: 3.4, diameterTop: 0.5, diameterBottom: 0.8 }, this.scene);
     trunk.position = position.add(new Vector3(0, 1.7, 0));
     trunk.material = this.mat("bark", palette.bark);
@@ -313,6 +356,7 @@ export class PawMeadowScene {
   }
 
   private giantTree(position: Vector3): void {
+    position.y = this.terrainHeightAt(position.x, position.z);
     const trunk = MeshBuilder.CreateCylinder("giant-tree-trunk", { height: 9, diameterTop: 2.1, diameterBottom: 4 }, this.scene);
     trunk.position = position.add(new Vector3(0, 4.5, 0));
     trunk.material = this.mat("giant-bark", palette.bark);
@@ -349,8 +393,9 @@ export class PawMeadowScene {
   }
 
   private createSlimes(shadows: ShadowGenerator): void {
-    [new Vector3(5, 0, -2), new Vector3(9, 0, 6), new Vector3(-11, 0, 7), new Vector3(-25, 0, -12), new Vector3(28, 0, -18)].forEach((position, index) => {
+    [new Vector3(5, 0, -2), new Vector3(9, 0, 6), new Vector3(-34, 0, 24), new Vector3(-55, 0, -28), new Vector3(48, 0, -38)].forEach((position, index) => {
       const entityId = `monster-green-slime-${index + 1}`;
+      position.y = this.terrainHeightAt(position.x, position.z);
       const root = new TransformNode(entityId, this.scene); root.position = position;
       const summary: TargetSummary = {
         entityId,
@@ -367,6 +412,7 @@ export class PawMeadowScene {
         idleMaxSeconds: 4,
         arrivalDistance: 0.16,
         isWalkable: (point) => this.isMonsterRoamWalkable(point),
+        terrainHeightAt: (x, z) => this.terrainHeightAt(x, z),
       }, 1089 + index * 7919);
       this.monsterRoaming.push(roaming);
       this.roamingByEntity.set(entityId, roaming);
@@ -382,16 +428,35 @@ export class PawMeadowScene {
   }
 
   private isMonsterRoamWalkable(point: Vector3): boolean {
-    if (point.x < -50 || point.x > 50 || point.z < -42 || point.z > 42) return false;
-    const giantTree = new Vector3(22, 0, 32);
+    if (point.x < -76 || point.x > 76 || point.z < -64 || point.z > 64) return false;
+    if (!this.isPlayerWalkable(point.x, point.z)) return false;
+    const giantTree = new Vector3(45, 0, 48);
     if (Vector3.DistanceSquared(point, giantTree) < 20.25) return false;
-    const trees = [new Vector3(-17, 0, -8), new Vector3(-35, 0, 12), new Vector3(35, 0, -12), new Vector3(38, 0, 28), new Vector3(-30, 0, 30), new Vector3(8, 0, -30)];
+    const trees = [new Vector3(-45, 0, -34), new Vector3(-58, 0, 18), new Vector3(60, 0, -38), new Vector3(54, 0, 34), new Vector3(-38, 0, 44), new Vector3(4, 0, -48), new Vector3(-66, 0, -10), new Vector3(68, 0, 12)];
     return !trees.some((tree) => Vector3.DistanceSquared(point, tree) < 4);
   }
 
+  private isPlayerWalkable(x: number, z: number): boolean {
+    if (x < -76 || x > 76 || z < -64 || z > 64) return false;
+    return !rockBarriers.some((rock) => Math.hypot(x - rock.x, z - rock.z) < 2.35);
+  }
+
+  private terrainHeightAt(x: number, z: number): number {
+    const terrace = (centerX: number, centerZ: number, radiusX: number, radiusZ: number, height: number) => {
+      const distance = Math.hypot((x - centerX) / radiusX, (z - centerZ) / radiusZ);
+      const amount = Scalar.Clamp((1 - distance) * 4, 0, 1);
+      return height * amount * amount * (3 - 2 * amount);
+    };
+    return terrace(-42, 24, 34, 30, 1.35)
+      + terrace(-42, 24, 22, 18, 1.1)
+      + terrace(43, -28, 30, 24, 1.1)
+      + terrace(43, -28, 18, 14, 0.8)
+      + terrace(42, 43, 28, 22, 0.9);
+  }
+
   private idle(target: TransformNode, distance: number, speed: number): void {
-    const animation = new Animation(`${target.name}-idle`, "position.y", 30, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
-    animation.setKeys([{ frame: 0, value: target.position.y }, { frame: 30, value: target.position.y + distance }, { frame: 60, value: target.position.y }]);
+    const animation = new Animation(`${target.name}-idle`, "scaling.y", 30, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
+    animation.setKeys([{ frame: 0, value: 1 }, { frame: 30, value: 1 + distance }, { frame: 60, value: 1 }]);
     target.animations = [animation];
     this.scene.beginAnimation(target, 0, 60, true, speed);
   }
