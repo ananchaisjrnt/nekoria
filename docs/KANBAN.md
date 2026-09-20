@@ -89,7 +89,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
-| 2026-09-20 | NK-003 | Implemented; moved to User Testing | Terra | pending push |
+| 2026-09-20 | NK-003 | Implemented; moved to User Testing | Terra | `62601fb` |
 | 2026-09-20 | NK-003 | SR issued; moved to Ready | Sol | `5212705` |
 | 2026-09-20 | NK-002 | Movement accepted after joystick-axis fix | User / Sol | `777e04e` |
 | 2026-09-20 | NK-002 | Movement v0.2 implemented | Sol | `44da50c` |
