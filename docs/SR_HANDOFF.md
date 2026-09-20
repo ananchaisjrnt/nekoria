@@ -1,6 +1,6 @@
 # NEKORIA — SYSTEM REQUIREMENTS HANDOFF
 
-Status: SR-003 Lock Target accepted; SR-004 issued; SR-005 queued
+Status: SR-004 Monster Roaming accepted; SR-005 issued
 
 SR owner: Sol
 
@@ -112,6 +112,6 @@ The current build emits a Babylon.js bundle-size warning. It is non-blocking for
 
 ## 7. Active and queued systems
 
-The user accepted SR-003 Lock Target.
+The user accepted SR-004 Monster Roaming.
 
-Terra may implement only `docs/SR_004_MONSTER_ROAMING.md`. `docs/SR_005_BASIC_ATTACK.md` is written but remains blocked until the user tests and accepts the deployed SR-004 build.
+Terra may implement only `docs/SR_005_BASIC_ATTACK.md`. Server-authoritative combat remains blocked until the user tests and accepts the deployed Basic Attack build and Sol issues another SR.

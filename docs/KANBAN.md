@@ -20,7 +20,13 @@ Acceptance owner: User
 
 ## Ready
 
-No card ready for implementation.
+### NK-005 — Basic Attack and Auto Approach
+
+- SR: `docs/SR_005_BASIC_ATTACK.md`
+- Owner: Terra
+- Status: Ready for implementation
+- Scope: ATK command, desktop double-click, auto approach, placeholder strike, mobile proximity lock
+- Excludes: HIT, MISS, CRIT, damage, HP changes, death, EXP, loot, Auto Battle
 
 ## In Progress
 
@@ -28,16 +34,16 @@ No active card.
 
 ## User Testing
 
-### NK-004 — Monster Roaming
-
-- SR: `docs/SR_004_MONSTER_ROAMING.md`
-- Owner: User
-- Status: Awaiting deployed-build acceptance
-- Scope: peaceful Green Slime idle roaming inside individual spawn leashes
-- Excludes: aggro, chase, attack, combat, server synchronization
-- Note: locally simulated visual prototype; server authority comes before multiplayer combat
+No card awaiting user testing.
 
 ## Done
+
+### NK-004 — Monster Roaming
+
+- Status: Accepted by user
+- Completed: 2026-09-20
+- Features: locally simulated peaceful roaming, spawn leash, per-entity movement variation, selected-target tracking
+- Commit: `e948f03`
 
 ### NK-003 — Lock Target
 
@@ -72,12 +78,11 @@ No active card.
 
 These cards are not authorized for implementation until Sol issues an SR.
 
-1. NK-005 — Basic Attack, automatic approach, and mobile proximity lock (SR written; blocked by NK-004 acceptance)
-2. NK-006 — Server-authoritative HIT, MISS, CRIT, damage, ASPD, monster HP and death
-3. NK-007 — EXP, Level Up and Status Points
-4. NK-008 — Ground Loot, walk-to-loot, pickup and Weight
-5. NK-009 — Minimal Auto Battle using the shared authoritative pathway
-6. NK-010 — Return Bell
+1. NK-006 — Server-authoritative HIT, MISS, CRIT, damage, ASPD, monster HP and death
+2. NK-007 — EXP, Level Up and Status Points
+3. NK-008 — Ground Loot, walk-to-loot, pickup and Weight
+4. NK-009 — Minimal Auto Battle using the shared authoritative pathway
+5. NK-010 — Return Bell
 
 ## Blocked / Later
 
@@ -97,6 +102,8 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-005 | SR unblocked; moved to Ready | Sol | pending push |
+| 2026-09-20 | NK-004 | User accepted Monster Roaming; moved to Done | User / Sol | `e948f03` |
 | 2026-09-20 | NK-004 | Implemented; moved to User Testing | Terra | `e948f03` |
 | 2026-09-20 | NK-005 | SR written; queued behind NK-004 | Sol | `d7d91a7` |
 | 2026-09-20 | NK-004 | SR issued; moved to Ready | Sol | `d7d91a7` |

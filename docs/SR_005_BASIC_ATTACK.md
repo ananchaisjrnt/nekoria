@@ -1,6 +1,6 @@
 # NEKORIA — SR-005 BASIC ATTACK AND AUTO APPROACH
 
-Status: Queued — blocked until SR-004 user acceptance
+Status: Ready for implementation
 
 SR owner: Sol
 
@@ -151,4 +151,3 @@ Fix all errors. The known Babylon.js bundle-size warning remains non-blocking.
 ## 10. Handoff
 
 Terra must update `docs/KANBAN.md`, report files changed, command/state architecture, platform behavior tested, validation results, limitations, commit SHA, and deployment status. Then stop for user testing. Do not begin authoritative combat.
-
