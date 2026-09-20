@@ -20,14 +20,7 @@ Acceptance owner: User
 
 ## Ready
 
-### NK-003 — Lock Target
-
-- SR: `docs/SR_003_LOCK_TARGET.md`
-- Owner: Terra
-- Status: Ready for implementation
-- Scope: select Green Slime, target ring, target HUD, clear/switch target
-- Excludes: approach, attack, damage, HP changes, death, EXP, loot, Auto Battle
-- Issued commit: `5212705`
+No card ready for implementation.
 
 ## In Progress
 
@@ -35,7 +28,13 @@ No active card.
 
 ## User Testing
 
-No card awaiting user testing.
+### NK-003 — Lock Target
+
+- SR: `docs/SR_003_LOCK_TARGET.md`
+- Owner: User
+- Status: Awaiting deployed-build acceptance
+- Scope: select Green Slime, target ring, target HUD, clear/switch target
+- Excludes: approach, attack, damage, HP changes, death, EXP, loot, Auto Battle
 
 ## Done
 
@@ -90,9 +89,9 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-003 | Implemented; moved to User Testing | Terra | pending push |
 | 2026-09-20 | NK-003 | SR issued; moved to Ready | Sol | `5212705` |
 | 2026-09-20 | NK-002 | Movement accepted after joystick-axis fix | User / Sol | `777e04e` |
 | 2026-09-20 | NK-002 | Movement v0.2 implemented | Sol | `44da50c` |
 | 2026-09-20 | NK-001 | Render build command fixed | Sol | `29e1bf3` |
 | 2026-09-20 | NK-001 | Prototype and Render bootstrap completed | Sol | `5a6fdd0` |
-

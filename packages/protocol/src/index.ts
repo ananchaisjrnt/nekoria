@@ -5,3 +5,8 @@ export interface MoveIntentPayload {
   readonly destination: { readonly x: number; readonly z: number };
   readonly sequence: number;
 }
+
+export interface TargetIntentPayload {
+  readonly targetEntityId: string | null;
+  readonly sequence: number;
+}

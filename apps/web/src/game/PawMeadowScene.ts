@@ -14,8 +14,11 @@ import {
   TransformNode,
   Vector3,
 } from "@babylonjs/core";
+import { GREEN_SLIME } from "@nekoria/game-core";
+import type { TargetIntentPayload } from "@nekoria/protocol";
 import type { MovementInput } from "./input/MovementInput";
 import { PlayerMovementController } from "./player/PlayerMovementController";
+import type { TargetSummary } from "./targeting/TargetingTypes";
 
 const palette = {
   grass: "#78b85c", darkGrass: "#4f8a45", path: "#d7b678", water: "#61b8d2",
@@ -23,15 +26,28 @@ const palette = {
   leather: "#76503a", scarf: "#a94736", slime: "#8bdd70",
 };
 
+interface MonsterEntity {
+  readonly entityId: string;
+  readonly root: TransformNode;
+  readonly summary: TargetSummary;
+}
+
 export class PawMeadowScene {
   private readonly engine: Engine;
   private readonly scene: Scene;
   private readonly camera: ArcRotateCamera;
   private readonly player: TransformNode;
   private readonly movement: PlayerMovementController;
+  private readonly monsters = new Map<string, MonsterEntity>();
   private pointerDown: { x: number; y: number } | null = null;
+  private readonly targetRing: ReturnType<typeof MeshBuilder.CreateTorus>;
+  private targetSequence = 0;
 
-  constructor(private readonly canvas: HTMLCanvasElement, input: MovementInput) {
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    input: MovementInput,
+    private readonly onTargetChange: (target: TargetSummary | null) => void,
+  ) {
     this.engine = new Engine(canvas, true, { antialias: true, adaptToDeviceRatio: true });
     this.scene = new Scene(this.engine);
     this.scene.clearColor = new Color4(0.62, 0.84, 0.96, 1);
@@ -41,7 +57,9 @@ export class PawMeadowScene {
     this.player = this.createAdventurer(shadows);
     this.movement = new PlayerMovementController(this.player, this.camera, input);
     this.createSlimes(shadows);
+    this.targetRing = this.createTargetRing();
     this.setupClickToMove();
+    window.addEventListener("keydown", this.handleKeyDown);
   }
 
   start(): void {
@@ -54,12 +72,26 @@ export class PawMeadowScene {
 
   dispose(): void {
     window.removeEventListener("resize", this.resize);
+    window.removeEventListener("keydown", this.handleKeyDown);
     this.engine.stopRenderLoop();
     this.scene.dispose();
     this.engine.dispose();
   }
 
   private readonly resize = (): void => this.engine.resize();
+  private readonly handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === "Escape") this.clearTarget();
+  };
+
+  clearTarget(): void {
+    if (!this.targetRing.isEnabled()) return;
+    this.targetRing.setEnabled(false);
+    this.targetRing.parent = null;
+    this.targetSequence += 1;
+    const intent: TargetIntentPayload = { targetEntityId: null, sequence: this.targetSequence };
+    void intent;
+    this.onTargetChange(null);
+  }
 
   private createCamera(): ArcRotateCamera {
     const camera = new ArcRotateCamera("mmorpg-camera", -Math.PI / 3.7, Math.PI / 3.15, 25, new Vector3(0, 2.2, 1), this.scene);
@@ -85,9 +117,41 @@ export class PawMeadowScene {
       const travel = Math.hypot(event.clientX - this.pointerDown.x, event.clientY - this.pointerDown.y);
       this.pointerDown = null;
       if (travel > 10) return;
-      const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => mesh.name === "paw-meadow");
-      if (pick?.hit && pick.pickedPoint) this.movement.moveTo(pick.pickedPoint);
+      const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) =>
+        typeof mesh.metadata?.targetEntityId === "string" || mesh.name === "paw-meadow",
+      );
+      const targetEntityId = pick?.pickedMesh?.metadata?.targetEntityId;
+      if (typeof targetEntityId === "string") {
+        this.selectTarget(targetEntityId);
+      } else if (pick?.hit && pick.pickedPoint) {
+        this.clearTarget();
+        this.movement.moveTo(pick.pickedPoint);
+      }
     });
+  }
+
+  private selectTarget(entityId: string): void {
+    const target = this.monsters.get(entityId);
+    if (!target) return;
+    this.targetRing.parent = target.root;
+    this.targetRing.position.set(0, 0.08, 0);
+    this.targetRing.setEnabled(true);
+    this.targetSequence += 1;
+    const intent: TargetIntentPayload = { targetEntityId: target.entityId, sequence: this.targetSequence };
+    void intent;
+    this.onTargetChange(target.summary);
+  }
+
+  private createTargetRing() {
+    const ring = MeshBuilder.CreateTorus("target-ring", { diameter: 1.9, thickness: 0.085, tessellation: 40 }, this.scene);
+    ring.rotation.x = Math.PI / 2;
+    ring.isPickable = false;
+    const material = this.mat("target-ring-mat", "#f6d56a");
+    material.emissiveColor = Color3.FromHexString("#d8a73c");
+    material.alpha = 0.92;
+    ring.material = material;
+    ring.setEnabled(false);
+    return ring;
   }
 
   private createLights(): ShadowGenerator {
@@ -192,12 +256,22 @@ export class PawMeadowScene {
 
   private createSlimes(shadows: ShadowGenerator): void {
     [new Vector3(5, 0, -2), new Vector3(9, 0, 6), new Vector3(-11, 0, 7)].forEach((position, index) => {
-      const root = new TransformNode(`green-slime-${index + 1}`, this.scene); root.position = position;
+      const entityId = `monster-green-slime-${index + 1}`;
+      const root = new TransformNode(entityId, this.scene); root.position = position;
+      const summary: TargetSummary = {
+        entityId,
+        displayName: GREEN_SLIME.displayName,
+        level: GREEN_SLIME.level,
+        currentHp: GREEN_SLIME.maxHp,
+        maxHp: GREEN_SLIME.maxHp,
+      };
+      this.monsters.set(entityId, { entityId, root, summary });
       const slime = MeshBuilder.CreateSphere(`slime-body-${index}`, { diameter: 1.35, segments: 18 }, this.scene);
       slime.parent = root; slime.position.y = 0.65; slime.scaling = new Vector3(1, 0.82, 1); slime.material = this.mat("slime", palette.slime, 0.9); shadows.addShadowCaster(slime);
+      slime.metadata = { targetEntityId: entityId };
       for (const x of [-0.24, 0.24]) {
         const eye = MeshBuilder.CreateSphere(`slime-eye-${index}-${x}`, { diameter: 0.12, segments: 8 }, this.scene);
-        eye.parent = root; eye.position = new Vector3(x, 0.77, -0.61); eye.material = this.mat("slime-eye", "#26352d");
+        eye.parent = root; eye.position = new Vector3(x, 0.77, -0.61); eye.material = this.mat("slime-eye", "#26352d"); eye.metadata = { targetEntityId: entityId };
       }
       this.idle(root, 0.09, 1.3 + index * 0.12);
     });

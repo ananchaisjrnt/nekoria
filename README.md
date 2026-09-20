@@ -4,11 +4,11 @@ Cute Fantasy 3D Web MMORPG featuring anthropomorphic cat adventurers.
 
 ## Current milestone
 
-Paw Meadow Movement Prototype v0.2: Babylon.js scene, elevated 3/4 MMORPG camera, placeholder Adventurer cat, Green Slimes, Giant Tree landmark, minimal HUD, and responsive desktop/mobile movement.
+Paw Meadow Lock Target Prototype v0.3: Babylon.js scene, elevated 3/4 MMORPG camera, placeholder Adventurer cat, Green Slimes, Giant Tree landmark, responsive desktop/mobile movement, and visual Lock Target.
 
-Movement is the first functional gameplay system. Click or tap walkable ground to move there, or use the on-screen joystick on desktop/mobile. Drag the world to rotate the camera and use the mouse wheel or pinch gesture to zoom.
+Click or tap walkable ground to move there, or use the on-screen joystick on desktop/mobile. Click or tap a Green Slime to lock it as the current target. Drag the world to rotate the camera and use the mouse wheel or pinch gesture to zoom.
 
-Combat, skills, targeting, and Auto Battle remain intentionally disabled until their individual test milestones.
+Combat, skills, and Auto Battle remain intentionally disabled until their individual test milestones. Lock Target is visual-only in v0.3: it does not move, attack, or damage the target.
 
 ## Requirements
 

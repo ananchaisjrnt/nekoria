@@ -1,16 +1,22 @@
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { GameCanvas } from "./game/GameCanvas";
+import { TargetPanel } from "./game/TargetPanel";
 import { VirtualJoystick } from "./game/VirtualJoystick";
 import { MovementInput } from "./game/input/MovementInput";
+import type { TargetSummary } from "./game/targeting/TargetingTypes";
 
 const skills = ["⚔", "✦", "✧", "✚"];
 
 export function App() {
   const input = useRef(new MovementInput()).current;
+  const [target, setTarget] = useState<TargetSummary | null>(null);
+  const [clearTargetRequest, setClearTargetRequest] = useState(0);
+  const handleTargetChange = useCallback((nextTarget: TargetSummary | null) => setTarget(nextTarget), []);
+  const clearTarget = useCallback(() => setClearTargetRequest((request) => request + 1), []);
 
   return (
     <main className="game-shell">
-      <GameCanvas input={input} />
+      <GameCanvas input={input} clearTargetRequest={clearTargetRequest} onTargetChange={handleTargetChange} />
 
       <section className="brand-card">
         <span className="brand-mark">●</span>
@@ -21,6 +27,8 @@ export function App() {
         <small>EXPLORATION AREA</small><strong>Paw Meadow</strong><span>Lv. 1–8 · Daylight</span>
       </section>
 
+      {target && <TargetPanel target={target} onClear={clearTarget} />}
+
       <VirtualJoystick input={input} />
 
       <nav className="action-bar" aria-label="Action controls preview">
@@ -29,7 +37,7 @@ export function App() {
       </nav>
 
       <button className="auto-button" type="button" disabled>AUTO</button>
-      <div className="prototype-badge">TAP THE GROUND OR USE THE JOYSTICK</div>
+      <div className="prototype-badge">TAP A SLIME TO LOCK TARGET</div>
     </main>
   );
 }
