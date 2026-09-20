@@ -20,13 +20,7 @@ Acceptance owner: User
 
 ## Ready
 
-### NK-004 — Monster Roaming
-
-- SR: `docs/SR_004_MONSTER_ROAMING.md`
-- Owner: Terra
-- Status: Ready for implementation
-- Scope: peaceful Green Slime idle roaming inside individual spawn leashes
-- Excludes: aggro, chase, attack, combat, server synchronization
+No card ready for implementation.
 
 ## In Progress
 
@@ -34,7 +28,14 @@ No active card.
 
 ## User Testing
 
-No card awaiting user testing.
+### NK-004 — Monster Roaming
+
+- SR: `docs/SR_004_MONSTER_ROAMING.md`
+- Owner: User
+- Status: Awaiting deployed-build acceptance
+- Scope: peaceful Green Slime idle roaming inside individual spawn leashes
+- Excludes: aggro, chase, attack, combat, server synchronization
+- Note: locally simulated visual prototype; server authority comes before multiplayer combat
 
 ## Done
 
@@ -96,6 +97,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-20 | NK-004 | Implemented; moved to User Testing | Terra | pending push |
 | 2026-09-20 | NK-005 | SR written; queued behind NK-004 | Sol | `d7d91a7` |
 | 2026-09-20 | NK-004 | SR issued; moved to Ready | Sol | `d7d91a7` |
 | 2026-09-20 | NK-003 | User accepted Lock Target; moved to Done | User / Sol | `62601fb` |

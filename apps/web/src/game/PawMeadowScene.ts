@@ -17,6 +17,7 @@ import {
 import { GREEN_SLIME } from "@nekoria/game-core";
 import type { TargetIntentPayload } from "@nekoria/protocol";
 import type { MovementInput } from "./input/MovementInput";
+import { MonsterRoamingController } from "./monsters/MonsterRoamingController";
 import { PlayerMovementController } from "./player/PlayerMovementController";
 import type { TargetSummary } from "./targeting/TargetingTypes";
 
@@ -39,6 +40,7 @@ export class PawMeadowScene {
   private readonly player: TransformNode;
   private readonly movement: PlayerMovementController;
   private readonly monsters = new Map<string, MonsterEntity>();
+  private readonly monsterRoaming: MonsterRoamingController[] = [];
   private pointerDown: { x: number; y: number } | null = null;
   private readonly targetRing: ReturnType<typeof MeshBuilder.CreateTorus>;
   private targetSequence = 0;
@@ -64,7 +66,9 @@ export class PawMeadowScene {
 
   start(): void {
     this.engine.runRenderLoop(() => {
-      this.movement.update(Math.min(this.engine.getDeltaTime() / 1000, 0.05));
+      const deltaSeconds = Math.min(this.engine.getDeltaTime() / 1000, 0.05);
+      this.movement.update(deltaSeconds);
+      this.monsterRoaming.forEach((controller) => controller.update(deltaSeconds));
       this.scene.render();
     });
     window.addEventListener("resize", this.resize);
@@ -266,6 +270,14 @@ export class PawMeadowScene {
         maxHp: GREEN_SLIME.maxHp,
       };
       this.monsters.set(entityId, { entityId, root, summary });
+      this.monsterRoaming.push(new MonsterRoamingController(root, {
+        roamRadius: 3.4 + index * 0.45,
+        moveSpeed: 0.85 + index * 0.12,
+        idleMinSeconds: 1.5,
+        idleMaxSeconds: 4,
+        arrivalDistance: 0.16,
+        isWalkable: (point) => this.isMonsterRoamWalkable(point),
+      }, 1089 + index * 7919));
       const slime = MeshBuilder.CreateSphere(`slime-body-${index}`, { diameter: 1.35, segments: 18 }, this.scene);
       slime.parent = root; slime.position.y = 0.65; slime.scaling = new Vector3(1, 0.82, 1); slime.material = this.mat("slime", palette.slime, 0.9); shadows.addShadowCaster(slime);
       slime.metadata = { targetEntityId: entityId };
@@ -275,6 +287,14 @@ export class PawMeadowScene {
       }
       this.idle(root, 0.09, 1.3 + index * 0.12);
     });
+  }
+
+  private isMonsterRoamWalkable(point: Vector3): boolean {
+    if (point.x < -22 || point.x > 22 || point.z < -18 || point.z > 18) return false;
+    const giantTree = new Vector3(4, 0, 15);
+    if (Vector3.DistanceSquared(point, giantTree) < 20.25) return false;
+    const trees = [new Vector3(-17, 0, -8), new Vector3(-20, 0, 8), new Vector3(20, 0, -8), new Vector3(17, 0, 16), new Vector3(-13, 0, 17)];
+    return !trees.some((tree) => Vector3.DistanceSquared(point, tree) < 4);
   }
 
   private idle(target: TransformNode, distance: number, speed: number): void {
