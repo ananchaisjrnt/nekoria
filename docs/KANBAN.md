@@ -28,14 +28,15 @@ No active card.
 
 ## User Testing
 
-### NK-010 — Ground Loot, Pickup, Inventory, and Weight
-
-- Status: Ready for user testing
-- SR: `docs/SR_010_GROUND_LOOT_AND_WEIGHT.md`
-- Scope: category-readable ground loot (junk bag, slot-specific equipment boxes, visible potions/refine materials, monster-like glowing Souls), authoritative drop/pickup, minimal inventory, hidden equipment data, and Weight validation
-- Commit: `6608580`
+No card awaiting user testing.
 
 ## Done
+
+### NK-010 — Ground Loot, Pickup, Inventory, and Weight
+
+- Status: Accepted by user
+- Scope: category-readable ground loot, authoritative drop/pickup, minimal inventory, hidden equipment data, and Weight validation
+- Commits: `6608580`, `1ffabd2`
 
 ### NK-009 — Paw Meadow Visual Benchmark
 
@@ -116,6 +117,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-21 | NK-010 | User accepted deployed Ground Loot, Pickup, Inventory, and Weight | User / Sol | `6608580` |
 | 2026-09-21 | NK-010 | Implemented and moved to User Testing | Terra | `6608580` |
 | 2026-09-21 | NK-010 | Implementation started | Sol / Terra | pending |
 | 2026-09-21 | NK-010 | Refined loot presentation: slot-specific equipment boxes; direct potion, refine-material, and monster-like Soul visuals | User / Sol | pending push |
