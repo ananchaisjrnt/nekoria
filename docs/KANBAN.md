@@ -1,6 +1,6 @@
 # NEKORIA — DEVELOPMENT KANBAN
 
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 
 Workflow owner: Sol
 
@@ -20,7 +20,11 @@ Acceptance owner: User
 
 ## Ready
 
-No card ready for implementation.
+### NK-010 — Ground Loot, Pickup, Inventory, and Weight
+
+- Status: Ready for Terra
+- SR: `docs/SR_010_GROUND_LOOT_AND_WEIGHT.md`
+- Scope: category-readable ground loot (junk bag, slot-specific equipment boxes, visible potions/refine materials, monster-like glowing Souls), authoritative drop/pickup, minimal inventory, hidden equipment data, and Weight validation
 
 ## In Progress
 
@@ -90,9 +94,8 @@ No card awaiting user testing.
 
 These cards are not authorized for implementation until Sol issues an SR.
 
-1. NK-010 — Ground Loot, walk-to-loot, pickup and Weight
-2. NK-011 — Minimal Auto Battle using the shared authoritative pathway
-3. NK-012 — Return Bell
+1. NK-011 — Minimal Auto Battle using the shared authoritative pathway
+2. NK-012 — Return Bell
 
 ## Blocked / Later
 
@@ -112,6 +115,8 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-21 | NK-010 | Refined loot presentation: slot-specific equipment boxes; direct potion, refine-material, and monster-like Soul visuals | User / Sol | pending push |
+| 2026-09-20 | NK-010 | Ground Loot and Weight SR issued; moved to Ready | Sol | pending push |
 | 2026-09-20 | NK-009 | User accepted Visual Benchmark and collision follow-up; moved to Done | User / Sol | `1350d9c` |
 | 2026-09-20 | NK-009 | Added shared collision registry for rocks, trees, bushes, and fences | Terra | pending push |
 | 2026-09-20 | NK-009 | Implemented and moved to User Testing | Terra | `60c14d2` |
