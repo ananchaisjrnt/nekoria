@@ -17,8 +17,7 @@ import {
   VertexBuffer,
 } from "@babylonjs/core";
 import { GREEN_SLIME } from "@nekoria/game-core";
-import type { TargetIntentPayload } from "@nekoria/protocol";
-import type { CombatResultPayload } from "@nekoria/protocol";
+import type { CombatResultPayload, GroundItemRemovedPayload, GroundItemSpawnedPayload, InventorySnapshotPayload, PickupResultPayload, TargetIntentPayload } from "@nekoria/protocol";
 import type { MovementInput } from "./input/MovementInput";
 import { MonsterRoamingController } from "./monsters/MonsterRoamingController";
 import { GameConnection } from "./network/GameConnection";
@@ -27,6 +26,7 @@ import { PlayerMovementController } from "./player/PlayerMovementController";
 import type { TargetSummary } from "./targeting/TargetingTypes";
 import { AdventurerVisual } from "./visuals/AdventurerVisual";
 import { GreenSlimeVisual } from "./visuals/GreenSlimeVisual";
+import { GroundLootVisual } from "./visuals/GroundLootVisual";
 
 const palette = {
   grass: "#78b85c", darkGrass: "#4f8a45", path: "#d7b678", water: "#61b8d2",
@@ -57,6 +57,8 @@ interface CircularObstacle {
   readonly radius: number;
 }
 
+interface GroundLootEntity { readonly payload: GroundItemSpawnedPayload; readonly visual: GroundLootVisual; }
+
 export class PawMeadowScene {
   private readonly engine: Engine;
   private readonly scene: Scene;
@@ -65,6 +67,7 @@ export class PawMeadowScene {
   private readonly playerVisual: AdventurerVisual;
   private readonly movement: PlayerMovementController;
   private readonly monsters = new Map<string, MonsterEntity>();
+  private readonly groundLoot = new Map<string, GroundLootEntity>();
   private readonly monsterRoaming: MonsterRoamingController[] = [];
   private readonly roamingByEntity = new Map<string, MonsterRoamingController>();
   private readonly obstacles: CircularObstacle[] = [];
@@ -75,13 +78,20 @@ export class PawMeadowScene {
   private proximityCheckElapsed = 0;
   private pointerDown: { x: number; y: number } | null = null;
   private readonly targetRing: ReturnType<typeof MeshBuilder.CreateTorus>;
+  private readonly lootRing: ReturnType<typeof MeshBuilder.CreateTorus>;
   private targetSequence = 0;
+  private activeLootId: string | null = null;
+  private pickupRequested = false;
+  private lastMoveSentAt = 0;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
     input: MovementInput,
     private readonly onTargetChange: (target: TargetSummary | null) => void,
     private readonly onCombatResult: (result: CombatResultPayload) => void,
+    private readonly onInventorySnapshot: (snapshot: InventorySnapshotPayload) => void,
+    private readonly onPickupFeedback: (text: string) => void,
+    private readonly onPickupAvailability: (available: boolean) => void,
   ) {
     this.engine = new Engine(canvas, true, { antialias: true, adaptToDeviceRatio: true });
     this.scene = new Scene(this.engine);
@@ -107,7 +117,14 @@ export class PawMeadowScene {
     );
     this.createSlimes(shadows);
     this.targetRing = this.createTargetRing();
-    this.connection = new GameConnection((result) => this.handleCombatResult(result));
+    this.lootRing = this.createLootRing();
+    this.connection = new GameConnection({
+      onCombatResult: (result) => this.handleCombatResult(result),
+      onGroundItemSpawned: (item) => this.spawnGroundLoot(item),
+      onGroundItemRemoved: (item) => this.removeGroundLoot(item),
+      onInventorySnapshot: this.onInventorySnapshot,
+      onPickupResult: (result) => this.handlePickupResult(result),
+    });
     this.attack = new BasicAttackController(
       this.player,
       this.movement,
@@ -131,9 +148,12 @@ export class PawMeadowScene {
       const deltaSeconds = Math.min(this.engine.getDeltaTime() / 1000, 0.05);
       this.monsterRoaming.forEach((controller) => controller.update(deltaSeconds));
       this.monsters.forEach((monster) => monster.visual.update(deltaSeconds));
+      this.groundLoot.forEach((loot) => loot.visual.update(deltaSeconds));
       this.updateProximityTarget(deltaSeconds);
       this.attack.update(deltaSeconds);
       this.movement.update(deltaSeconds);
+      this.updatePickup();
+      this.syncPosition();
       this.playerVisual.update(deltaSeconds, this.movement.isMoving());
       this.scene.render();
     });
@@ -168,6 +188,13 @@ export class PawMeadowScene {
   }
 
   requestAttack(): void { this.attack.request(this.activeTargetId); }
+  requestPickup(): void {
+    if (!this.activeLootId) this.selectNearestLoot();
+    if (!this.activeLootId) return;
+    this.pickupRequested = true;
+    const loot = this.groundLoot.get(this.activeLootId);
+    if (loot) this.movement.moveTo(new Vector3(loot.payload.position.x, this.terrainHeightAt(loot.payload.position.x, loot.payload.position.z), loot.payload.position.z));
+  }
 
   private handleCombatResult(result: CombatResultPayload): void {
     const monster = this.monsters.get(result.targetEntityId);
@@ -217,7 +244,9 @@ export class PawMeadowScene {
   }
 
   private readonly handleDoubleClick = (): void => {
-    const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => typeof mesh.metadata?.targetEntityId === "string");
+    const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => typeof mesh.metadata?.targetEntityId === "string" || typeof mesh.metadata?.groundItemId === "string");
+    const groundItemId = pick?.pickedMesh?.metadata?.groundItemId;
+    if (typeof groundItemId === "string") { this.selectLoot(groundItemId); this.requestPickup(); return; }
     const entityId = pick?.pickedMesh?.metadata?.targetEntityId;
     if (typeof entityId === "string") { this.selectTarget(entityId, "manual"); this.requestAttack(); }
   };
@@ -247,10 +276,13 @@ export class PawMeadowScene {
       this.pointerDown = null;
       if (travel > 10) return;
       const pick = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) =>
-        typeof mesh.metadata?.targetEntityId === "string" || mesh.name === "paw-meadow",
+        typeof mesh.metadata?.targetEntityId === "string" || typeof mesh.metadata?.groundItemId === "string" || mesh.name === "paw-meadow",
       );
+      const groundItemId = pick?.pickedMesh?.metadata?.groundItemId;
       const targetEntityId = pick?.pickedMesh?.metadata?.targetEntityId;
-      if (typeof targetEntityId === "string") {
+      if (typeof groundItemId === "string") {
+        this.selectLoot(groundItemId);
+      } else if (typeof targetEntityId === "string") {
         this.selectTarget(targetEntityId, "manual");
       } else if (pick?.hit && pick.pickedPoint) {
         this.clearTarget();
@@ -302,6 +334,87 @@ export class PawMeadowScene {
     ring.material = material;
     ring.setEnabled(false);
     return ring;
+  }
+
+  private createLootRing() {
+    const ring = MeshBuilder.CreateTorus("loot-ring", { diameter: 1.05, thickness: 0.05, tessellation: 28 }, this.scene);
+    ring.rotation.x = Math.PI / 2;
+    ring.isPickable = false;
+    const material = this.mat("loot-ring-mat", "#aeea7b");
+    material.emissiveColor = Color3.FromHexString("#83c955");
+    ring.material = material;
+    ring.setEnabled(false);
+    return ring;
+  }
+
+  private spawnGroundLoot(payload: GroundItemSpawnedPayload): void {
+    if (this.groundLoot.has(payload.groundItemId)) return;
+    const visual = new GroundLootVisual(payload, this.scene, this.terrainHeightAt(payload.position.x, payload.position.z));
+    visual.root.scaling = new Vector3(0.2, 0.2, 0.2);
+    Animation.CreateAndStartAnimation(`loot-pop-${payload.groundItemId}`, visual.root, "scaling", 30, 10, visual.root.scaling.clone(), Vector3.One(), Animation.ANIMATIONLOOPMODE_CONSTANT, undefined, undefined, this.scene);
+    this.groundLoot.set(payload.groundItemId, { payload, visual });
+    this.onPickupAvailability(true);
+  }
+
+  private removeGroundLoot(payload: GroundItemRemovedPayload): void {
+    const loot = this.groundLoot.get(payload.groundItemId);
+    if (!loot) return;
+    loot.visual.dispose();
+    this.groundLoot.delete(payload.groundItemId);
+    if (this.activeLootId === payload.groundItemId) this.clearLootSelection();
+    this.onPickupAvailability(this.groundLoot.size > 0);
+  }
+
+  private selectLoot(groundItemId: string): void {
+    const loot = this.groundLoot.get(groundItemId);
+    if (!loot) return;
+    this.clearTarget();
+    this.activeLootId = groundItemId;
+    this.lootRing.parent = loot.visual.root;
+    this.lootRing.position.set(0, -0.25, 0);
+    this.lootRing.setEnabled(true);
+    this.onPickupAvailability(true);
+  }
+
+  private clearLootSelection(): void {
+    this.activeLootId = null;
+    this.pickupRequested = false;
+    this.lootRing.parent = null;
+    this.lootRing.setEnabled(false);
+  }
+
+  private selectNearestLoot(): void {
+    let nearest: GroundLootEntity | null = null;
+    let closest = Infinity;
+    for (const loot of this.groundLoot.values()) {
+      const distance = Math.hypot(this.player.position.x - loot.payload.position.x, this.player.position.z - loot.payload.position.z);
+      if (distance < closest) { nearest = loot; closest = distance; }
+    }
+    if (nearest) this.selectLoot(nearest.payload.groundItemId);
+  }
+
+  private updatePickup(): void {
+    if (!this.pickupRequested || !this.activeLootId) return;
+    const loot = this.groundLoot.get(this.activeLootId);
+    if (!loot) { this.clearLootSelection(); return; }
+    const distance = Math.hypot(this.player.position.x - loot.payload.position.x, this.player.position.z - loot.payload.position.z);
+    if (distance > 2.05) return;
+    this.pickupRequested = false;
+    this.connection.move(this.player.position.x, this.player.position.z);
+    this.connection.pickup(loot.payload.groundItemId);
+  }
+
+  private handlePickupResult(result: PickupResultPayload): void {
+    if (result.success) { this.onPickupFeedback("PICKED UP"); return; }
+    const messages = { NOT_FOUND: "ITEM GONE", TOO_FAR: "TOO FAR", OVERWEIGHT: "TOO HEAVY", NOT_ELIGIBLE: "NOT YOUR LOOT" };
+    this.onPickupFeedback(messages[result.reason ?? "NOT_FOUND"]);
+  }
+
+  private syncPosition(): void {
+    const now = performance.now();
+    if (now - this.lastMoveSentAt < 250) return;
+    this.lastMoveSentAt = now;
+    this.connection.move(this.player.position.x, this.player.position.z);
   }
 
   private createLights(): ShadowGenerator {

@@ -20,15 +20,15 @@ Acceptance owner: User
 
 ## Ready
 
-### NK-010 — Ground Loot, Pickup, Inventory, and Weight
-
-- Status: Ready for Terra
-- SR: `docs/SR_010_GROUND_LOOT_AND_WEIGHT.md`
-- Scope: category-readable ground loot (junk bag, slot-specific equipment boxes, visible potions/refine materials, monster-like glowing Souls), authoritative drop/pickup, minimal inventory, hidden equipment data, and Weight validation
+No card ready for implementation.
 
 ## In Progress
 
-No active card.
+### NK-010 — Ground Loot, Pickup, Inventory, and Weight
+
+- Status: In Progress
+- SR: `docs/SR_010_GROUND_LOOT_AND_WEIGHT.md`
+- Scope: category-readable ground loot (junk bag, slot-specific equipment boxes, visible potions/refine materials, monster-like glowing Souls), authoritative drop/pickup, minimal inventory, hidden equipment data, and Weight validation
 
 ## User Testing
 
@@ -115,6 +115,7 @@ Do not begin these systems during the current vertical slice unless Sol explicit
 
 | Date | Card | Change | Owner | Commit |
 |---|---|---|---|---|
+| 2026-09-21 | NK-010 | Implementation started | Sol / Terra | pending |
 | 2026-09-21 | NK-010 | Refined loot presentation: slot-specific equipment boxes; direct potion, refine-material, and monster-like Soul visuals | User / Sol | pending push |
 | 2026-09-20 | NK-010 | Ground Loot and Weight SR issued; moved to Ready | Sol | pending push |
 | 2026-09-20 | NK-009 | User accepted Visual Benchmark and collision follow-up; moved to Done | User / Sol | `1350d9c` |

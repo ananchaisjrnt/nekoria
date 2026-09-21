@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { GREEN_SLIME, expForNextLevel, statusPointsForLevel } from "@nekoria/game-core";
 import type { AttackIntentPayload, CombatResultPayload } from "@nekoria/protocol";
+import { LootService } from "./loot.service.js";
 
 interface PlayerState {
   hp: number;
@@ -14,6 +15,8 @@ interface PlayerState {
 @Injectable()
 export class CombatService {
   private readonly players = new Map<object, PlayerState>();
+
+  constructor(private readonly loot: LootService) {}
 
   attack(client: object, intent: AttackIntentPayload): CombatResultPayload | null {
     const player = this.players.get(client) ?? this.createPlayerState();
@@ -44,6 +47,7 @@ export class CombatService {
 
   disconnect(client: object): void {
     this.players.delete(client);
+    this.loot.disconnect(client);
   }
 
   private createPlayerState(): PlayerState {

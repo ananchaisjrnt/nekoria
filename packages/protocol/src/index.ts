@@ -29,3 +29,55 @@ export interface CombatResultPayload {
   readonly level: number;
   readonly statusPoints: number;
 }
+
+export type GroundLootAppearance =
+  | "GIFT_BAG" | "WEAPON_BOX" | "BODY_BOX" | "SHOES_BOX" | "HEAD_BOX"
+  | "OFF_HAND_BOX" | "ACCESSORY_BOX" | "HP_POTION" | "SP_POTION" | "REFINE_MATERIAL" | "SOUL";
+
+export interface WorldPositionPayload { readonly x: number; readonly z: number; }
+
+export interface PositionSyncIntentPayload {
+  readonly position: WorldPositionPayload;
+  readonly sequence: number;
+}
+
+export interface PickupItemIntentPayload {
+  readonly groundItemId: string;
+  readonly sequence: number;
+}
+
+export interface GroundItemSpawnedPayload {
+  readonly groundItemId: string;
+  readonly appearance: GroundLootAppearance;
+  readonly publicLabel: string;
+  readonly position: WorldPositionPayload;
+  readonly rarity: "common" | "uncommon" | "rare";
+  readonly expiresAt: number;
+}
+
+export interface GroundItemRemovedPayload {
+  readonly groundItemId: string;
+  readonly reason: "PICKED_UP" | "EXPIRED";
+}
+
+export interface InventoryEntryPayload {
+  readonly inventoryId: string;
+  readonly publicLabel: string;
+  readonly appearance: GroundLootAppearance;
+  readonly quantity: number;
+  readonly unitWeight: number;
+  readonly identified: boolean;
+}
+
+export interface InventorySnapshotPayload {
+  readonly entries: readonly InventoryEntryPayload[];
+  readonly currentWeight: number;
+  readonly maxWeight: number;
+}
+
+export interface PickupResultPayload {
+  readonly groundItemId: string;
+  readonly success: boolean;
+  readonly reason?: "NOT_FOUND" | "TOO_FAR" | "OVERWEIGHT" | "NOT_ELIGIBLE";
+  readonly inventory?: InventorySnapshotPayload;
+}

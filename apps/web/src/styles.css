@@ -19,6 +19,9 @@ button { font: inherit; }
 .map-card small { color: #d6e3c8; font: .62rem system-ui, sans-serif; letter-spacing: .1em; }
 .map-card strong { margin: 2px 0; font-size: 1.18rem; font-weight: 500; }
 .progress-card { position:absolute; z-index:3; top:105px; left:20px; display:grid; padding:9px 12px; border:1px solid rgb(242 211 141 / 45%); border-radius:10px; background:rgb(28 30 24 / 82%); font:.68rem system-ui,sans-serif; gap:2px; }
+.inventory-card { position:absolute; z-index:3; top:195px; left:20px; display:grid; min-width:180px; gap:4px; padding:9px 12px; border:1px solid rgb(165 222 127 / 38%); border-radius:10px; background:rgb(25 33 24 / 82%); font:.66rem system-ui,sans-serif; }
+.inventory-card > div { display:flex; justify-content:space-between; gap:12px; color:#e9d88d; }
+.inventory-card small { color:#e6edd8; }
 .combat-text { position:absolute; z-index:4; top:42%; left:50%; color:#fff2a8; font:800 1.7rem system-ui,sans-serif; text-shadow:0 2px 4px #000; animation:combat-pop .7s ease-out forwards; pointer-events:none; }
 @keyframes combat-pop { to { transform:translateY(-45px); opacity:0; } }
 .target-panel { position: absolute; z-index: 3; top: 20px; left: 50%; width: min(280px, calc(100vw - 270px)); padding: 10px 12px 12px; transform: translateX(-50%); border: 1px solid rgb(244 211 129 / 68%); border-radius: 10px 18px 10px 18px; color: #fff8e6; background: linear-gradient(145deg, rgb(34 35 27 / 92%), rgb(65 55 35 / 84%)); box-shadow: 0 12px 34px rgb(18 25 15 / 30%), inset 0 1px rgb(255 255 255 / 13%); backdrop-filter: blur(9px); }
@@ -38,6 +41,7 @@ button { font: inherit; }
 .action-bar button kbd { position: absolute; right: -2px; bottom: -2px; display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #20251f; color: #ddd4b9; font: .6rem system-ui, sans-serif; }
 .action-bar .attack-button { width: 76px; height: 76px; color: #fff1c0; font: 700 .8rem system-ui, sans-serif; letter-spacing: .05em; }
 .auto-button { top: 98px; right: 22px; width: 48px; height: 48px; font: 700 .57rem system-ui, sans-serif; }
+.pickup-button { position:absolute; z-index:4; right:24px; bottom:112px; min-width:78px; height:44px; border:2px solid #9acb62; border-radius:999px; color:#f4ffe0; background:linear-gradient(145deg,#557c3e,#263c2c); box-shadow:0 4px 14px rgb(0 0 0 / 32%); font:700 .67rem system-ui,sans-serif; letter-spacing:.06em; }
 .prototype-badge { bottom: 16px; left: 50%; padding: 8px 13px; transform: translateX(-50%); border-radius: 999px; color: #f6df9d; font: .58rem system-ui, sans-serif; letter-spacing: .11em; white-space: nowrap; }
 @media (min-width: 900px) and (pointer: fine) { .joystick { opacity: .72; } }
 @media (max-width: 700px) {
@@ -48,6 +52,7 @@ button { font: inherit; }
   .map-card strong { font-size: .95rem; }
   .target-panel { top: 75px; width: min(252px, calc(100vw - 32px)); padding: 8px 10px 10px; }
   .progress-card { top:72px; left:10px; }
+  .inventory-card { top:162px; left:10px; min-width:150px; padding:7px 9px; font-size:.6rem; }
   .joystick { bottom: 20px; left: 18px; width: 100px; height: 100px; }
   .joystick__knob { width: 44px; height: 44px; }
   .action-bar { right: 12px; bottom: 15px; gap: 5px; }
@@ -55,5 +60,6 @@ button { font: inherit; }
   .action-bar button:nth-child(3), .action-bar button:nth-child(4) { display: none; }
   .action-bar .attack-button { width: 62px; height: 62px; }
   .auto-button { top: 82px; right: 12px; width: 42px; height: 42px; }
+  .pickup-button { right:12px; bottom:92px; min-width:74px; height:42px; }
   .prototype-badge { bottom: 3px; font-size: .48rem; }
 }
